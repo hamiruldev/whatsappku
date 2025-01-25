@@ -1,0 +1,104 @@
+class LoginForm extends HTMLElement {
+  connectedCallback() {
+    this.innerHTML = `
+        <div class="flex min-h-[80vh] items-center justify-center">
+            <div class="glass rounded-2xl p-8 w-full max-w-md">
+                <h2 class="text-3xl font-bold text-white mb-8 text-center">Welcome Back</h2>
+                <form id="loginForm" class="space-y-6">
+                    <div class="space-y-2">
+                        <label for="username" class="block text-sm font-medium text-white">Username</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required
+                            class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
+                            placeholder="Enter your username"
+                        >
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="password" class="block text-sm font-medium text-white">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required
+                            class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
+                            placeholder="Enter your password"
+                        >
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="remember" class="rounded border-white/20 text-blue-500 focus:ring-blue-400 bg-white/10">
+                            <label for="remember" class="ml-2 text-white">Remember me</label>
+                        </div>
+                        <a href="/forgot-password" class="text-blue-300 hover:text-blue-200 transition">Forgot password?</a>
+                    </div>
+                    
+                    <button 
+                        type="submit"
+                        class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 text-white font-medium transition duration-200 ease-in-out transform hover:scale-[1.02]"
+                    >
+                        Sign in
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-white">
+                        Don't have an account? 
+                        <a href="/register" class="text-blue-300 hover:text-blue-200 transition">Sign up</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const form = this.querySelector("#loginForm");
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const username = form.username.value;
+      const password = form.password.value;
+
+      // Handle login logic (API call)
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          // Show success message with nice animation
+          this.showNotification('Success! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.href = "/dashboard";
+          }, 1500);
+        } else {
+          this.showNotification(data.message || 'Login failed!', 'error');
+        }
+      } catch (error) {
+        console.error("Error logging in:", error);
+        this.showNotification('An error occurred while logging in.', 'error');
+      }
+    });
+  }
+
+  showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg glass text-white ${
+      type === 'success' ? 'bg-green-500/20' : 'bg-red-500/20'
+    }`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+}
+
+customElements.define("login-form", LoginForm);

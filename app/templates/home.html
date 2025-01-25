@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}WhatsApp CRM - Automate Your Customer Relations{% endblock %}
+
+{% block content %}
+<div class="pt-20">
+    <!-- Hero Section -->
+    <section class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row items-center">
+                <div class="lg:w-1/2">
+                    <h1 class="text-4xl lg:text-6xl font-bold text-white mb-8">
+                        Automate Your WhatsApp Customer Relations
+                    </h1>
+                    <p class="text-xl text-white/80 mb-8">
+                        Streamline your customer engagement with automated birthday wishes, daily updates, and more through WhatsApp.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="/register" class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition transform hover:scale-105">
+                            Get Started Free
+                        </a>
+                        <a href="#features" class="px-8 py-4 glass text-white rounded-xl transition transform hover:scale-105">
+                            Learn More
+                        </a>
+                    </div>
+                </div>
+                <div class="lg:w-1/2 mt-12 lg:mt-0">
+                    <img src="/static/images/hero.png" alt="WhatsApp CRM" class="w-full">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl lg:text-4xl font-bold text-white text-center mb-16">
+                Powerful Features for Your Business
+            </h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="glass rounded-2xl p-8">
+                    <div class="text-blue-400 mb-4">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">Automated Birthday Wishes</h3>
+                    <p class="text-white/80">
+                        Automatically send personalized birthday cards to your customers through WhatsApp.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="glass rounded-2xl p-8">
+                    <div class="text-blue-400 mb-4">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">Daily Updates</h3>
+                    <p class="text-white/80">
+                        Keep your customers informed with automated daily updates on prices and news.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass rounded-2xl p-8">
+                    <div class="text-blue-400 mb-4">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">Automated Responses</h3>
+                    <p class="text-white/80">
+                        Set up automated responses for common customer inquiries.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="glass rounded-2xl p-12 text-center">
+                <h2 class="text-3xl lg:text-4xl font-bold text-white mb-8">
+                    Ready to Transform Your Customer Relations?
+                </h2>
+                <p class="text-xl text-white/80 mb-8">
+                    Join thousands of businesses already using our WhatsApp CRM solution.
+                </p>
+                <a href="/register" class="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition transform hover:scale-105">
+                    Start Your Free Trial
+                </a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

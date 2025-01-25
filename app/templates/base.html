@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Default Title{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0369a1',
+                        secondary: '#1e293b'
+                    },
+                    animation: {
+                        'gradient': 'gradient 8s linear infinite',
+                    },
+                    keyframes: {
+                        'gradient': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/css">
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-blue-700 animate-gradient transition-colors duration-200">
+    <div class="min-h-screen flex flex-col">
+        <header class="glass fixed w-full top-0 z-50">
+            <nav class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a href="/" class="text-white text-2xl font-bold">WhatsApp CRM</a>
+                    <div class="flex items-center space-x-6">
+                        <button id="theme-toggle" class="p-2 rounded-lg glass text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path class="sun hidden" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                <path class="moon" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                            </svg>
+                        </button>
+                        <div class="space-x-4">
+                            <a href="/" class="text-white hover:text-blue-200 transition">Home</a>
+                            <a href="/login" class="text-white hover:text-blue-200 transition">Login</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        
+        <main class="flex-grow container mx-auto px-6 pt-24 pb-12">
+            {% block content %}
+            {% endblock %}
+        </main>
+
+        <footer class="glass mt-auto">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-white text-center">© 2025 MyApp</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/js/theme.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

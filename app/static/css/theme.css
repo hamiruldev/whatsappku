@@ -1,0 +1,35 @@
+:root {
+  /* Light theme */
+  --primary-light: #0369a1;
+  --secondary-light: #1e293b;
+  --background-light: #ffffff;
+  --text-light: #1a1a1a;
+  --glass-light: rgba(255, 255, 255, 0.1);
+  --border-light: rgba(255, 255, 255, 0.2);
+
+  /* Dark theme */
+  --primary-dark: #3b82f6;
+  --secondary-dark: #1e293b;
+  --background-dark: #0f172a;
+  --text-dark: #ffffff;
+  --glass-dark: rgba(0, 0, 0, 0.2);
+  --border-dark: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] {
+  --primary: var(--primary-light);
+  --secondary: var(--secondary-light);
+  --background: var(--background-light);
+  --text: var(--text-light);
+  --glass: var(--glass-light);
+  --border: var(--border-light);
+}
+
+[data-theme="dark"] {
+  --primary: var(--primary-dark);
+  --secondary: var(--secondary-dark);
+  --background: var(--background-dark);
+  --text: var(--text-dark);
+  --glass: var(--glass-dark);
+  --border: var(--border-dark);
+} 
