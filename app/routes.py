@@ -1,5 +1,6 @@
 from flask import render_template, request, jsonify
 from app.controllers import whatsapp
+from app.controllers.scheduler import toggle_morning_message
 
 def register_routes(app):
     @app.route("/")
@@ -42,3 +43,22 @@ def register_routes(app):
         contact_id = request.args.get("contactId")  # Optional parameter
         contacts = whatsapp.WhatsAppController.get_contacts(contact_id=contact_id)
         return jsonify(contacts)
+
+    @app.route('/api/scheduler/morning-message', methods=['GET'])
+    def get_scheduler_status():
+        from app.controllers.scheduler import get_schedule_time
+        return jsonify(get_schedule_time())
+
+    @app.route('/api/scheduler/morning-message', methods=['POST'])
+    def update_scheduler_status():
+        data = request.json
+        enabled = data.get('enabled', False)
+        hour = data.get('hour', 9)
+        minute = data.get('minute', 0)
+        toggle_morning_message(enabled, hour, minute)
+        return jsonify({
+            "message": "Scheduler updated successfully", 
+            "enabled": enabled,
+            "hour": hour,
+            "minute": minute
+        })

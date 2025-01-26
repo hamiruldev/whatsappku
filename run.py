@@ -1,8 +1,8 @@
-from app import app
+from app import create_app
+import os
 
-if __name__ == '__main__':
-    # Initialize scheduled tasks
-    #schedule_gold_price_updates()
-    
-    # Run the application
-    app.run(debug=True) 
+app = create_app()
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)

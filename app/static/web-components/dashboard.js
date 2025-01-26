@@ -8,6 +8,7 @@ class DashboardContainer extends HTMLElement {
         <div class="p-6 space-y-6">
           <total-contacts></total-contacts>
           <running-automations></running-automations>
+          <scheduler-settings></scheduler-settings>
           <application-settings></application-settings>
           <user-profile></user-profile>
         </div>
@@ -66,7 +67,7 @@ class RunningAutomations extends HTMLElement {
         <ul class="mt-2 automation-list"></ul>
       </div>
     `;
-    this.fetchAutomations();
+    // this.fetchAutomations();
   }
 }
 
