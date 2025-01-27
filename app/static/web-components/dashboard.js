@@ -1,14 +1,14 @@
 class DashboardContainer extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
-      <div class="min-h-screen bg-gray-100 text-gray-900">
-        <div class="p-6 bg-blue-600 text-white">
-          <h1 class="text-2xl font-bold">Business Owner Dashboard</h1>
+      <div class="min-h-screen text-gray-900">
+        <div class="p-3 black-white">
+          <h1 class="text-2xl text-white font-bold">Welcome Hamirul</h1>
         </div>
-        <div class="p-6 space-y-6">
+        <div class="p-3 flex flex-col space-y-6">
           <total-contacts></total-contacts>
-          <running-automations></running-automations>
           <scheduler-settings></scheduler-settings>
+          <message-list></message-list>
           <application-settings></application-settings>
           <user-profile></user-profile>
         </div>
@@ -16,16 +16,43 @@ class DashboardContainer extends HTMLElement {
     `;
   }
 }
-
 class TotalContacts extends HTMLElement {
   async fetchTotalContacts(contactId) {
     try {
+      // Get the value from localStorage
+      const storedTotalContacts = localStorage.getItem("totalContacts");
+
+      // Check if the value is valid (not null, undefined, or an invalid string)
+      if (
+        storedTotalContacts &&
+        storedTotalContacts !== "0" &&
+        storedTotalContacts !== "undefined" &&
+        storedTotalContacts !== "null" &&
+        window.allContacts &&
+        window.allContacts.length > 0
+      ) {
+        this.querySelector(".contact-count").textContent = storedTotalContacts;
+        return;
+      }
+
+      // Fetch data if not available in localStorage
       const response = await fetch(
         `/api/contacts?contactId=${encodeURIComponent(contactId)}`
       );
       const data = await response.json();
-      console.log("Specific Contact:", data);
-      this.querySelector(".contact-count").textContent = data.length || 0;
+      console.log("Specific Contact:", data.error);
+
+      if (data.error) {
+        this.querySelector(".contact-count").textContent = "Error";
+        return;
+      }
+      // Update the UI and save in localStorage
+      const contactCount = data.length;
+
+      window.allContacts = data;
+
+      this.querySelector(".contact-count").textContent = contactCount;
+      localStorage.setItem("totalContacts", contactCount);
     } catch (error) {
       console.error("Failed to fetch total contacts:", error);
     }
@@ -38,10 +65,9 @@ class TotalContacts extends HTMLElement {
         <p class="mt-2 text-2xl font-semibold text-blue-600 contact-count">...</p>
       </div>
     `;
-    this.fetchTotalContacts('all');
+    this.fetchTotalContacts("all");
   }
 }
-
 class RunningAutomations extends HTMLElement {
   async fetchAutomations() {
     try {
@@ -70,7 +96,6 @@ class RunningAutomations extends HTMLElement {
     // this.fetchAutomations();
   }
 }
-
 class ApplicationSettings extends HTMLElement {
   updateThemeColor(color) {
     document.documentElement.style.setProperty("--theme-color", color);
@@ -100,7 +125,6 @@ class ApplicationSettings extends HTMLElement {
     });
   }
 }
-
 class UserProfile extends HTMLElement {
   async fetchUserProfile() {
     try {
@@ -127,8 +151,121 @@ class UserProfile extends HTMLElement {
   }
 }
 
+// class MessageList extends HTMLElement {
+//   connectedCallback() {
+//     this.innerHTML = `
+//       <div class="glass rounded-2xl p-6 shadow-lg bg-gradient-to-r from-blue-800 via-blue-600 to-blue-400">
+//         <h2 class="text-2xl font-bold text-white mb-4">Auto Messages</h2>
+//         <div id="grid"></div>
+
+//         <script type="text/x-template" id="enabledTemplate" >
+//            <input id="enable-button" type="checkbox" />
+//         </script>
+
+//       </div>
+//     `;
+
+//     this.renderGrid();
+//   }
+
+//   renderGrid() {
+//     const messages = JSON.parse(localStorage.getItem("autoMessages")) || [];
+
+//     function renderCell(args) {
+//       var inputElement = args.cell.querySelector("input#enable-button");
+
+//       var switchObj = new ej.buttons.Switch({
+//         cssClass: "e-togglebutton",
+//         change: (args) => {
+//           console.log(args);
+//         },
+//       });
+
+//       switchObj.appendTo(inputElement);
+//     }
+
+//     const grid = new ej.grids.Grid({
+//       dataSource: messages,
+//       enableAdaptiveUI: false,
+//       allowResizing: true,
+//       queryCellInfo: renderCell,
+//       toolbar: ["Add", "Edit", "Delete", "Update", "Cancel"],
+//       editSettings: {
+//         allowEditing: true,
+//         allowAdding: true,
+//         allowDeleting: true,
+//         mode: "Dialog",
+//       },
+//       columns: [
+//         {
+//           field: "id",
+//           headerText: "ID",
+//           isPrimaryKey: true,
+//           textAlign: "Left",
+//           width: 100,
+//           visible: false, // Hide ID in edit/create modes
+//         },
+//         {
+//           field: "time",
+//           headerText: "Time",
+//           textAlign: "Left",
+//           width: 150,
+//           type: "datetime",
+//           editType: "datetimepickeredit",
+//           format: "dd/MM/yyyy hh:mm",
+//         },
+//         {
+//           field: "phone",
+//           headerText: "Phone Number",
+//           textAlign: "Left",
+//           width: 150,
+//         },
+//         {
+//           field: "message",
+//           headerText: "Message",
+//           textAlign: "Left",
+//           width: 300,
+//         },
+//         {
+//           field: "enabled",
+//           headerText: "Enabled",
+//           textAlign: "Center",
+//           width: 150,
+//           template: "#enabledTemplate",
+//         },
+//       ],
+//       actionComplete: (args) => {
+//         if (args.requestType === "save" || args.requestType === "delete") {
+//           const updatedMessages = grid.dataSource;
+//           localStorage.setItem("autoMessages", JSON.stringify(updatedMessages));
+//         }
+//       },
+//       dataBound: () => {
+//         // Initialize the Syncfusion Toggle Button for each row
+//         messages.forEach((data) => {
+//           const toggleButton = new ej.buttons.Button({
+//             isPrimary: true,
+//             content: data.enabled ? "Enabled" : "Disabled",
+//             cssClass: data.enabled ? "e-success" : "e-danger",
+//             onClick: (event) => {
+//               data.enabled = !data.enabled; // Toggle enabled state
+//               localStorage.setItem("autoMessages", JSON.stringify(messages));
+//               toggleButton.content = data.enabled ? "Enabled" : "Disabled";
+//               toggleButton.cssClass = data.enabled ? "e-success" : "e-danger";
+//             },
+//           });
+//           toggleButton.appendTo(`#toggleButton${data?.id}`);
+//         });
+//       },
+//     });
+
+//     grid.appendTo("#grid");
+//   }
+// }
+
 customElements.define("dashboard-container", DashboardContainer);
 customElements.define("total-contacts", TotalContacts);
 customElements.define("running-automations", RunningAutomations);
 customElements.define("application-settings", ApplicationSettings);
 customElements.define("user-profile", UserProfile);
+// customElements.define("message-list", MessageList);

@@ -1,6 +1,5 @@
 from flask import render_template, request, jsonify
 from app.controllers import whatsapp
-from app.controllers.scheduler import toggle_morning_message
 
 def register_routes(app):
     @app.route("/")
@@ -50,15 +49,55 @@ def register_routes(app):
         return jsonify(get_schedule_time())
 
     @app.route('/api/scheduler/morning-message', methods=['POST'])
+    
     def update_scheduler_status():
+        
+        from app.controllers.scheduler import toggle_morning_message
+        
         data = request.json
         enabled = data.get('enabled', False)
         hour = data.get('hour', 9)
         minute = data.get('minute', 0)
-        toggle_morning_message(enabled, hour, minute)
+        phone = data.get('phone', 0)
+        message = data.get('message', 'None')
+        toggle_morning_message(enabled, hour, minute, phone, message)
         return jsonify({
-            "message": "Scheduler updated successfully", 
             "enabled": enabled,
             "hour": hour,
-            "minute": minute
+            "minute": minute,
+            "phone": phone,
+            "message": message
         })
+
+    @app.route('/api/scheduled-messages', methods=['GET'])
+    def get_scheduled_messages():
+        from app.controllers.scheduler import get_all_scheduled_messages
+        messages = get_all_scheduled_messages()
+        return jsonify(messages)
+
+    @app.route('/api/scheduled-messages', methods=['POST'])
+    def create_scheduled_message():
+        from app.controllers.scheduler import add_scheduled_message
+        data = request.json
+        
+        job_id = add_scheduled_message(
+            hour=data.get('hour'),
+            minute=data.get('minute'),
+            phone=data.get('phone'),
+            message=data.get('message')
+        )
+        
+        return jsonify({
+            'id': job_id,
+            'status': 'success',
+            'message': 'Scheduled message created'
+        })
+
+    @app.route('/api/scheduled-messages/<job_id>', methods=['DELETE'])
+    def delete_scheduled_message(job_id):
+        from app.controllers.scheduler import remove_scheduled_message
+        success = remove_scheduled_message(job_id)
+        
+        if success:
+            return jsonify({'status': 'success', 'message': 'Scheduled message removed'})
+        return jsonify({'status': 'error', 'message': 'Failed to remove scheduled message'}), 400
