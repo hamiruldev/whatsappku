@@ -6,6 +6,7 @@ class DashboardContainer extends HTMLElement {
           <h1 class="text-2xl text-white font-bold">Welcome Hamirul</h1>
         </div>
         <div class="p-3 flex flex-col space-y-6">
+          <health-status></health-status>
           <total-contacts></total-contacts>
           <scheduler-settings></scheduler-settings>
           <message-list></message-list>
@@ -60,9 +61,9 @@ class TotalContacts extends HTMLElement {
 
   connectedCallback() {
     this.innerHTML = `
-      <div class="p-4 bg-white rounded-lg shadow">
+      <div class="p-4 glass text-white rounded-lg shadow">
         <h2 class="text-lg font-bold">Total Contacts</h2>
-        <p class="mt-2 text-2xl font-semibold text-blue-600 contact-count">...</p>
+        <p class="mt-2 text-2xl text-white font-semibold contact-count">...</p>
       </div>
     `;
     this.fetchTotalContacts("all");
@@ -88,9 +89,9 @@ class RunningAutomations extends HTMLElement {
 
   connectedCallback() {
     this.innerHTML = `
-      <div class="p-4 bg-white rounded-lg shadow">
-        <h2 class="text-lg font-bold">Running Automations</h2>
-        <ul class="mt-2 automation-list"></ul>
+      <div class="p-4 glass text-white rounded-lg shadow">
+        <h2 class="text-lg text-white font-bold">Running Automations</h2>
+        <ul class="mt-2 text-white automation-list"></ul>
       </div>
     `;
     // this.fetchAutomations();

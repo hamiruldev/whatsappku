@@ -27,8 +27,8 @@ class MessageList extends HTMLElement {
         // Create new scheduled message
         // Extract hour and minute from the ISO date string
         const date = new Date(data.time);
-        const hour = date.getUTCHours();
-        const minute = date.getUTCMinutes();
+        const hour = date.getHours();
+        const minute = date.getMinutes();
 
         // Create new scheduled message
         const response = await fetch("/api/scheduled-messages", {
@@ -79,7 +79,7 @@ class MessageList extends HTMLElement {
 
     var phoneElem, phoneObj;
 
-    const grid = new ej.grids.Grid({
+    var grid = new ej.grids.Grid({
       dataSource: this.messages,
       allowPaging: true,
       pageSettings: { pageSize: 10 },
@@ -98,10 +98,19 @@ class MessageList extends HTMLElement {
         allowEditing: true,
         allowAdding: true,
         allowDeleting: true,
+        allowDragging: false,
         mode: "Dialog",
       },
 
       columns: [
+        {
+          field: "id",
+          headerText: "ID",
+          //   isPrimaryKey: true,
+          textAlign: "Left",
+          width: 100,
+          visible: false, // Hide ID in edit/create modes
+        },
         {
           field: "enabled",
           headerText: "Enabled",
@@ -111,14 +120,6 @@ class MessageList extends HTMLElement {
           visible: true,
         },
         {
-          field: "id",
-          headerText: "ID",
-          isPrimaryKey: true,
-          textAlign: "Left",
-          width: 100,
-          visible: true, // Hide ID in edit/create modes
-        },
-        {
           field: "time",
           headerText: "Time",
           textAlign: "Left",
@@ -126,6 +127,7 @@ class MessageList extends HTMLElement {
           type: "datetime",
           editType: "datetimepickeredit",
           format: "dd/MM/yyyy hh:mm",
+          visible: true,
         },
         {
           field: "phone",
@@ -138,10 +140,10 @@ class MessageList extends HTMLElement {
               return phoneElem;
             },
             read: function () {
-              return phoneObj.value; // Return the selected phone value
+              return phoneObj.value;
             },
             destroy: function () {
-              phoneObj.destroy(); // Destroy the DropDownList instance
+              phoneObj.destroy();
             },
             write: function (args) {
               phoneObj = new ej.dropdowns.DropDownList({
@@ -156,16 +158,51 @@ class MessageList extends HTMLElement {
               phoneObj.appendTo(phoneElem);
             },
           },
+          visible: true,
         },
         {
           field: "message",
           headerText: "Message",
           textAlign: "Left",
           width: 300,
+          editType: "textarea",
+          visible: true,
+          rows: 3,
         },
       ],
 
       toolbar: ["Add", "Edit", "Delete"],
+
+      actionBegin(args) {
+        if (args.requestType === "beginEdit" || args.requestType === "add") {
+          for (var i = 0; i < grid.columns.length; i++) {
+            if (
+              grid.columns[i].field == "enabled" ||
+              grid.columns[i].field == "id"
+            ) {
+              grid.columns[i].visible = false;
+            }
+          }
+        }
+      },
+
+      actionComplete(args) {
+        if (args.requestType === "beginEdit" || args.requestType === "add") {
+          var dialog = args.dialog;
+          dialog.allowDragging = false;
+          dialog.header =
+            args.requestType === "beginEdit"
+              ? "Edit Message of " + args.rowData["id"]
+              : "New Message";
+        }
+        if (args.requestType === "save" || args.requestType === "cancel") {
+          for (var i = 0; i < grid.columns.length; i++) {
+            grid.columns[i].visible = true;
+          }
+
+          grid.refresh();
+        }
+      },
 
       queryCellInfo: (args) => {
         if (args.column.field === "enabled") {
@@ -178,7 +215,7 @@ class MessageList extends HTMLElement {
             change: async (switchArgs) => {
               const newEnabled = switchArgs.checked;
 
-              args.data.phone = `${args.data.phone}@c.us`;
+              args.data.phone = `${args.data.phone}`;
 
               await this.toggleMessage(args.data, newEnabled);
               args.data.enabled = newEnabled;
@@ -187,26 +224,6 @@ class MessageList extends HTMLElement {
           });
 
           switchObj.appendTo(inputElement);
-        }
-      },
-      actionBegin: function (args) {
-        if (args.requestType === "beginEdit" || args.requestType === "add") {
-          // Hide the "id" and "enabled" columns in edit/add mode
-          const columnsToHide = ["id", "enabled"];
-          columnsToHide.forEach((columnField) => {
-            const column = grid.getColumnByField(columnField);
-            column.visible = false;
-          });
-        }
-      },
-      actionComplete: function (args) {
-        if (args.requestType === "save" || args.requestType === "cancel") {
-          // Restore visibility after saving or canceling
-          const columnsToShow = ["id", "enabled"];
-          columnsToShow.forEach((columnField) => {
-            const column = grid.getColumnByField(columnField);
-            column.visible = true;
-          });
         }
       },
     });
@@ -242,7 +259,7 @@ class MessageList extends HTMLElement {
 
   render() {
     this.innerHTML = `
-      <div class="glass rounded-2xl p-6 shadow-lg bg-gradient-to-r from-blue-800 via-blue-600 to-blue-400">
+      <div class="glass rounded-2xl  text-white  p-6 shadow-lg">
         <h2 class="text-2xl font-bold text-white mb-4">Scheduled Messages</h2>
         
          <script type="text/x-template" id="enabledTemplate" >

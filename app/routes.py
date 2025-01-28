@@ -1,5 +1,6 @@
 from flask import render_template, request, jsonify
 from app.controllers import whatsapp
+from datetime import datetime
 
 def register_routes(app):
     @app.route("/")
@@ -101,3 +102,16 @@ def register_routes(app):
         if success:
             return jsonify({'status': 'success', 'message': 'Scheduled message removed'})
         return jsonify({'status': 'error', 'message': 'Failed to remove scheduled message'}), 400
+
+    @app.route('/api/waha/health', methods=['GET'])
+    def check_waha_health():
+        """Endpoint to manually check WAHA API health"""
+        from app.services.health_check import HealthCheckService
+        
+        is_healthy, health_data = HealthCheckService.check_waha_health()
+        
+        return jsonify({
+            'healthy': is_healthy,
+            'timestamp': datetime.now().isoformat(),
+            'details': health_data
+        }), 200 if is_healthy else 503

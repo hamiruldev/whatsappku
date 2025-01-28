@@ -19,7 +19,7 @@ export const userAPI = {
   validateField: async (field, value) => {
     try {
       const result = await pb.collection("usersku").getList(1, 1, {
-        filter: `${field} = "${value}"`
+        filter: `${field} = "${value}"`,
       });
       return result.items.length === 0;
     } catch (error) {
@@ -38,7 +38,7 @@ export const userAPI = {
   getAllUsers: (page = 1, perPage = 50, options = {}) =>
     pb.collection("usersku").getList(page, perPage, {
       sort: "username",
-      ...options
+      ...options,
     }),
 
   validateReferralCode: async (code) =>
@@ -49,14 +49,14 @@ export const userAPI = {
   getUserDetails: async (userId) => {
     if (!userId) return null;
     return pb.collection("usersku").getOne(userId, {
-      fields: "id,username,name,email,avatar_url"
+      fields: "id,username,name,email,avatar_url",
     });
   },
 
   getUsername: async (userId) => {
     const record = await userAPI.getProfile(userId);
     return record?.name || record?.username || null;
-  }
+  },
 };
 
 // Authentication API
@@ -73,7 +73,7 @@ export const authAPI = {
 
       return {
         role: roleDetails?.name || "guest",
-        tenantId: "rb0s8fazmuf44ac"
+        tenantId: "rb0s8fazmuf44ac",
       };
     } catch (error) {
       console.error("Error checking user role:", error);
@@ -108,7 +108,7 @@ export const authAPI = {
       password,
       passwordConfirm: password,
       full_name: name,
-      username
+      username,
     };
     await userAPI.register(userData);
     return authAPI.login(email, password);
@@ -136,11 +136,11 @@ export const authAPI = {
         username: authModel.username,
         isAdmin: role === "admin",
         isSuperAdmin: false,
-        tenantId
+        tenantId,
       };
     }
     return null;
-  }
+  },
 };
 
 // List of Values (LOV) API
@@ -148,6 +148,6 @@ export const LOV = {
   getUsers: (page = 1, perPage = 50, options = {}) =>
     pb.collection("userku_lov").getFullList(page, perPage, {
       sort: "-created",
-      ...options
-    })
+      ...options,
+    }),
 };

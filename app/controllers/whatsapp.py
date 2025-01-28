@@ -1,82 +1,72 @@
-import requests
+from app.services.whatsapp_api import WhatsAppAPI
 from flask import current_app
-import base64
 
 class WhatsAppController:
     @staticmethod
-    def post_status(image_path):
+    def post_status(image_path, caption=None):
         """
-        Sends a status update to WhatsApp.
-        :param image_path: Path to the image file.
-        :return: JSON response from WAHA API.
+        Business logic for sending a status update to WhatsApp.
         """
-        with open(image_path, 'rb') as image_file:
-            encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
-        
-        payload = {
-            "session": current_app.config['WAHA_SESSION'],
-            "file": {
-                "mimetype": "image/jpeg",
-                "data": encoded_image
-            }
-        }
-        
-        response = requests.post(
-            f"{current_app.config['WAHA_API_URL']}/sendStatus",
-            json=payload
-        )
-        return response.json()
+        try:
+            response = WhatsAppAPI.send_status(image_path=image_path, caption=caption)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            current_app.logger.error(f"Error posting status: {e}")
+            return {"error": str(e)}
 
     @staticmethod
-    def send_message(chat_id, message):
+    def send_message(chat_id, message, reply_to=None):
         """
-        Sends a message to a specific chat ID.
-        :param chat_id: WhatsApp chat ID.
-        :param message: Message text to send.
-        :return: JSON response from WAHA API.
+        Business logic for sending a message to a specific chat.
         """
-        payload = {
-            "session": current_app.config['WAHA_SESSION'],
-            "chatId": chat_id,
-            "reply_to": None,
-            "text": message,
-            "linkPreview": True,
-        }
-        
-        response = requests.post(
-            f"{current_app.config['WAHA_API_URL']}/api/sendText",
-            json=payload
-        )
-        return response.json()
+        try:
+            # Format chat_id if needed
+            formatted_chat_id = f"{chat_id}@c.us" if "@c.us" not in chat_id else chat_id
+            
+            response = WhatsAppAPI.send_text(
+                chat_id=formatted_chat_id,
+                text=message,
+                reply_to=reply_to
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            current_app.logger.error(f"Error sending message: {e}")
+            return {"error": str(e)}
     
     @staticmethod
     def get_contacts(contact_id=None):
         """
-        Fetches the list of all contacts or details of a specific contact from WAHA API.
-        :param contact_id: Optional contact ID to fetch specific contact details.
-        :return: JSON response containing contacts or an error message.
+        Business logic for fetching contacts.
         """
         try:
-            if contact_id != 'all':
-                # Endpoint for a specific contact
-                url = f"{current_app.config['WAHA_API_URL']}/api/contacts"
-                params = {
-                    "contactId": contact_id,
-                    "session": current_app.config['WAHA_SESSION']
-                }
-            else:
-                # Endpoint for all contacts
-                url = f"{current_app.config['WAHA_API_URL']}/api/contacts/all"
-                params = {
-                    "session": current_app.config['WAHA_SESSION']
-                }
-            
-            # Make the GET request
-            response = requests.get(url, params=params)
+            response = WhatsAppAPI.get_contacts(contact_id)
             response.raise_for_status()
-            
-            # Return the JSON response
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             current_app.logger.error(f"Error fetching contacts: {e}")
+            return {"error": str(e)}
+
+    @staticmethod
+    def send_media_message(chat_id, media_type, file_path=None, file_url=None, caption=None):
+        """
+        Business logic for sending media messages (images, videos, documents).
+        """
+        try:
+            formatted_chat_id = f"{chat_id}@c.us" if "@c.us" not in chat_id else chat_id
+            
+            if media_type == "image":
+                response = WhatsAppAPI.send_image(formatted_chat_id, file_path, file_url, caption)
+            elif media_type == "video":
+                response = WhatsAppAPI.send_video(formatted_chat_id, file_path, file_url, caption)
+            elif media_type == "document":
+                response = WhatsAppAPI.send_document(formatted_chat_id, file_path, file_url)
+            else:
+                return {"error": "Unsupported media type"}
+            
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            current_app.logger.error(f"Error sending media message: {e}")
             return {"error": str(e)}
