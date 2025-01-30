@@ -1,17 +1,17 @@
-class HealthStatus extends HTMLElement {
+class SessionStatus extends HTMLElement {
   constructor() {
     super();
-    this.health = {
-      healthy: false,
+    this.session = {
+      valid: false,
       lastCheck: null,
       details: null,
     };
   }
 
   async connectedCallback() {
-    await this.checkHealth();
+    await this.checkSession();
     this.render();
-    this.startHealthCheck();
+    this.startSessionCheck();
   }
 
   disconnectedCallback() {
@@ -20,58 +20,54 @@ class HealthStatus extends HTMLElement {
     }
   }
 
-  async checkHealth() {
+  async checkSession() {
     try {
-      const response = await fetch("/api/health");
+      const response = await fetch("/api/session");
       const data = await response.json();
-      console.log(data);
-      this.health = {
-        healthy: data.healthy,
+      this.session = {
+        valid: data.valid,
         lastCheck: new Date(data.timestamp),
         details: data.details,
       };
       this.render();
     } catch (error) {
-      console.log(error);
-      console.error("Error checking health:", error);
-      this.health.healthy = false;
+      console.error("Error checking session:", error);
+      this.session.valid = false;
       this.render();
     }
   }
 
-  startHealthCheck() {
+  startSessionCheck() {
     // Check every 5 minutes
-    this.interval = setInterval(() => this.checkHealth(), 5 * 60 * 1000);
+    this.interval = setInterval(() => this.checkSession(), 5 * 60 * 1000);
   }
 
   render() {
-    const statusClass = this.health.healthy ? "bg-green-500" : "bg-red-500";
-    const statusText = this.health.healthy ? "Healthy" : "Unhealthy";
-
-    console.log(this.health);
+    const statusClass = this.session.valid ? "bg-green-500" : "bg-red-500";
+    const statusText = this.session.valid ? "Valid" : "Invalid";
 
     this.innerHTML = `
             <div class="glass rounded-2xl p-6 shadow-lg">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold text-white">WAHA API Status</h2>
+                    <h2 class="text-xl font-bold text-white">Session Status</h2>
                     <span class="px-3 py-1 rounded-full ${statusClass} text-white text-sm">
                         ${statusText}
                     </span>
                 </div>
                 ${
-                  this.health.lastCheck
+                  this.session.lastCheck
                     ? `
                     <p class="text-sm text-white/60 mt-2">
-                        Last checked: ${this.health.lastCheck.toLocaleString()}
+                        Last checked: ${this.session.lastCheck.toLocaleString()}
                     </p>
                 `
                     : ""
                 }
                 ${
-                  this.health.details && !this.health.details.error
+                  this.session.details?.error
                     ? `
                     <p class="text-sm text-red-400 mt-2">
-                        Error: ${this.health.details.error}
+                        Error: ${this.session.details.error}
                     </p>
                 `
                     : ""
@@ -81,4 +77,4 @@ class HealthStatus extends HTMLElement {
   }
 }
 
-customElements.define("health-status", HealthStatus);
+customElements.define("session-status", SessionStatus);

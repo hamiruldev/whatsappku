@@ -177,3 +177,123 @@ class WhatsAppAPI:
             "limit": limit
         }
         return requests.get(url, params=params) 
+    
+    @staticmethod
+    def check_session_status():
+        """
+        Check the current session status.
+        Returns: tuple (bool, dict) - (is_valid, session_data)
+        """
+        try:
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions?all=true"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                session_data = response.json()
+                
+                return session_data
+            
+            current_app.logger.error(f"Session status check failed with status code: {response.status_code}")
+            return False, {'error': f'Status check failed with status {response.status_code}'}
+            
+        except Exception as e:
+            current_app.logger.error(f"Error checking session status: {str(e)}")
+            return False, {'error': str(e)}
+
+    @staticmethod
+    def check_session_status_me():
+        """
+        Check the current session status.
+        Returns: tuple (bool, dict) - (is_valid, session_data)
+        """
+        try:
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/session/me"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                session_data = response.json()
+                expected_id = "60184644305@c.us"
+                
+                is_valid = session_data.get('id') == expected_id
+                if not is_valid:
+                    current_app.logger.warning(f"Session ID mismatch: {session_data.get('id')}")
+                
+                return is_valid, session_data
+            
+            current_app.logger.error(f"Session status check failed with status code: {response.status_code}")
+            return False, {'error': f'Status check failed with status {response.status_code}'}
+            
+        except Exception as e:
+            current_app.logger.error(f"Error checking session status: {str(e)}")
+            return False, {'error': str(e)}
+
+    @staticmethod
+    def create_session(session_name):
+        """Create a new session with webhook configuration"""
+        try:
+            # Configure webhook first
+            from app.services.webhook_service import WebhookService
+            webhook_success, _ = WebhookService.configure_webhook(session_name)
+            
+            if not webhook_success:
+                current_app.logger.warning("Failed to configure webhook, continuing with session creation")
+            
+            # Create session
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions"
+            response = requests.post(url, json={'name': session_name}, timeout=10)
+            return response.status_code == 200, response.json()
+            
+        except Exception as e:
+            return False, {'error': str(e)}
+
+    @staticmethod
+    def delete_session(session_name):
+        """Delete a session"""
+        try:
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/{session_name}"
+            response = requests.delete(url, timeout=10)
+            return response.status_code == 200, response.json()
+        except Exception as e:
+            return False, {'error': str(e)}
+
+    @staticmethod
+    def start_session():
+        """Start the session"""
+        try:
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/session/start"
+            response = requests.post(url, timeout=10)
+            return response.status_code == 200, response.json()
+        except Exception as e:
+            return False, {'error': str(e)}
+
+    @staticmethod
+    def stop_session():
+        """Stop the session"""
+        try:
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/session/stop"
+            response = requests.post(url, timeout=10)
+            return response.status_code == 200, response.json()
+        except Exception as e:
+            return False, {'error': str(e)}
+
+    @staticmethod
+    def restart_session(session_name):
+        """Restart the session using WAHA API"""
+        try:
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/{session_name}/restart"
+            response = requests.post(url, timeout=90)
+
+            # Handle HTTP errors
+            if response.status_code != 200:
+                return False, {'error': f"Failed to restart session {session_name}: {response.text}"}
+
+            return True, response.json()
+        except requests.exceptions.RequestException as e:
+            return False, {'error': f"Request error: {str(e)}"}
+
+    @staticmethod
+    def get_screenshot():
+        """Get a screenshot of the current session"""
+        url = f"{current_app.config['WAHA_API_URL']}/api/sessions/session/screenshot"
+        response = requests.get(url, timeout=10)
+        return response.status_code == 200, response.json()

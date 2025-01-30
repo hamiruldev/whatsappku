@@ -7,11 +7,10 @@ class DashboardContainer extends HTMLElement {
         </div>
         <div class="p-3 flex flex-col space-y-6">
           <health-status></health-status>
+          <session-manager></session-manager>
           <total-contacts></total-contacts>
           <scheduler-settings></scheduler-settings>
           <message-list></message-list>
-          <application-settings></application-settings>
-          <user-profile></user-profile>
         </div>
       </div>
     `;

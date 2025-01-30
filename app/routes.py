@@ -1,6 +1,7 @@
 from flask import render_template, request, jsonify
 from app.controllers import whatsapp
 from datetime import datetime
+from apscheduler.schedulers.background import BackgroundScheduler
 
 def register_routes(app):
     @app.route("/")
@@ -103,7 +104,7 @@ def register_routes(app):
             return jsonify({'status': 'success', 'message': 'Scheduled message removed'})
         return jsonify({'status': 'error', 'message': 'Failed to remove scheduled message'}), 400
 
-    @app.route('/api/waha/health', methods=['GET'])
+    @app.route('/api/health', methods=['GET'])
     def check_waha_health():
         """Endpoint to manually check WAHA API health"""
         from app.services.health_check import HealthCheckService
@@ -115,3 +116,133 @@ def register_routes(app):
             'timestamp': datetime.now().isoformat(),
             'details': health_data
         }), 200 if is_healthy else 503
+        
+    @app.route('/api/sessions', methods=['GET'])
+    def check_session_status():
+        """Endpoint to manually check WAHA session status"""
+        from app.services.whatsapp_api import WhatsAppAPI
+        
+        session_data = WhatsAppAPI.check_session_status()
+        
+        return jsonify({
+            'timestamp': datetime.now().isoformat(),
+            'details': session_data
+        }), 200
+        
+    @app.route('/api/session/me', methods=['GET'])
+    def check_session_status_me():
+        """Endpoint to manually check WAHA session status"""
+        from app.services.whatsapp_api import WhatsAppAPI
+        
+        is_valid, session_data = WhatsAppAPI.check_session_status_me()
+        
+        return jsonify({
+            'valid': is_valid,
+            'timestamp': datetime.now().isoformat(),
+            'details': session_data
+        }), 200 if is_valid else 503
+
+    @app.route('/api/session/create', methods=['POST'])
+    def create_session():
+        """Create a new session"""
+        from app.services.whatsapp_api import WhatsAppAPI
+        data = request.json
+        success, result = WhatsAppAPI.create_session(data.get('name'))
+        return jsonify(result), 200 if success else 400
+
+    @app.route('/api/session/delete', methods=['DELETE'])
+    def delete_session():
+        """Delete a session"""
+        from app.services.whatsapp_api import WhatsAppAPI
+        data = request.json
+        success, result = WhatsAppAPI.delete_session(data.get('name'))
+        return jsonify(result), 200 if success else 400
+
+    @app.route('/api/session/start', methods=['POST'])
+    def start_session():
+        """Start the session"""
+        from app.services.whatsapp_api import WhatsAppAPI
+        success, result = WhatsAppAPI.start_session()
+        return jsonify(result), 200 if success else 400
+
+    @app.route('/api/session/stop', methods=['POST'])
+    def stop_session():
+        """Stop the session"""
+        from app.services.whatsapp_api import WhatsAppAPI
+        success, result = WhatsAppAPI.stop_session()
+        return jsonify(result), 200 if success else 400
+
+    @app.route('/api/session/restart', methods=['POST'])
+    def restart_session():
+        """Restart the session"""
+        from app.services.whatsapp_api import WhatsAppAPI
+        
+        data = request.get_json()  # Use `get_json()` to handle missing JSON body safely
+        if not data or 'name' not in data:
+            return jsonify({'error': 'Session name is required'}), 400
+
+        session_name = data['name']
+        success, result = WhatsAppAPI.restart_session(session_name)
+
+        return jsonify(result), 200 if success else 400
+
+    @app.route('/api/session/screenshot', methods=['GET'])
+    def get_screenshot():
+        """Get session screenshot"""
+        from app.services.whatsapp_api import WhatsAppAPI
+        success, result = WhatsAppAPI.get_screenshot()
+        return jsonify(result), 200 if success else 400
+
+    @app.route('/webhook', methods=['POST'])
+    def webhook_handler():
+        """Handle incoming webhooks from WAHA server"""
+        try:
+            data = request.json
+            
+            # Log the incoming webhook
+            current_app.logger.info(f"Received webhook: {data.get('event')}")
+            current_app.logger.debug(f"Webhook payload: {data}")
+
+            # Handle session.status events
+            if data.get('event') == 'session.status':
+                return handle_session_status(data)
+            
+            return jsonify({'status': 'success', 'message': 'Event ignored'}), 200
+            
+        except Exception as e:
+            current_app.logger.error(f"Error processing webhook: {str(e)}")
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+
+    def handle_session_status(data):
+        """Handle session.status events"""
+        try:
+            session_name = data.get('session')
+            payload = data.get('payload', {})
+            status = payload.get('status')
+            
+            current_app.logger.info(f"Session {session_name} status changed to {status}")
+            
+            # Emit status to all connected clients via WebSocket
+            emit_session_status(session_name, status)
+            
+            return jsonify({
+                'status': 'success',
+                'session': session_name,
+                'new_status': status
+            }), 200
+            
+        except Exception as e:
+            current_app.logger.error(f"Error handling session status: {str(e)}")
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+
+    @app.route('/api/scheduler/jobs', methods=['GET'])
+    def get_scheduler_jobs():
+        jobs = []
+        for job in scheduler.get_jobs():
+            jobs.append({
+                'id': job.id,
+                'next_run_time': str(job.next_run_time),
+                'trigger': str(job.trigger),
+                'args': job.args
+            })
+        return jsonify(jobs)

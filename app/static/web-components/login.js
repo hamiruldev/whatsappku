@@ -66,38 +66,30 @@ class LoginForm extends HTMLElement {
         const response = await fetch("/api/login", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password }),
         });
 
         const data = await response.json();
         if (response.ok) {
           // Show success message with nice animation
-          this.showNotification('Success! Redirecting...', 'success');
+          this.showNotification("Success! Redirecting...", "success");
           setTimeout(() => {
             window.location.href = "/dashboard";
           }, 1500);
         } else {
-          this.showNotification(data.message || 'Login failed!', 'error');
+          this.showNotification(data.message || "Login failed!", "error");
         }
       } catch (error) {
         console.error("Error logging in:", error);
-        this.showNotification('An error occurred while logging in.', 'error');
+        this.showNotification("An error occurred while logging in.", "error");
       }
     });
   }
 
   showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 p-4 rounded-lg glass text-white ${
-      type === 'success' ? 'bg-green-500/20' : 'bg-red-500/20'
-    }`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-      notification.remove();
-    }, 3000);
+    showNotification(message, type);
   }
 }
 

@@ -13,7 +13,11 @@ class MessageList extends HTMLElement {
   async loadMessages() {
     try {
       const response = await fetch("/api/scheduled-messages");
-      this.messages = await response.json();
+
+      const data = await response.json();
+      const updatedData = updateTimeToDate(data);
+
+      this.messages = updatedData;
     } catch (error) {
       console.error("Error loading messages:", error);
       this.messages = [];
@@ -53,13 +57,13 @@ class MessageList extends HTMLElement {
         });
       }
 
-      this.showNotification(
+      showNotification(
         `Message ${enabled ? "scheduled" : "unscheduled"} successfully`,
         "success"
       );
     } catch (error) {
       console.error("Error toggling message:", error);
-      this.showNotification("Error updating message schedule", "error");
+      showNotification("Error updating message schedule", "error");
     }
   }
 
@@ -109,7 +113,7 @@ class MessageList extends HTMLElement {
           //   isPrimaryKey: true,
           textAlign: "Left",
           width: 100,
-          visible: false, // Hide ID in edit/create modes
+          visible: true, // Hide ID in edit/create modes
         },
         {
           field: "enabled",
@@ -123,11 +127,12 @@ class MessageList extends HTMLElement {
           field: "time",
           headerText: "Time",
           textAlign: "Left",
-          width: 150,
+          width: 180,
           type: "datetime",
           editType: "datetimepickeredit",
           format: "dd/MM/yyyy hh:mm",
           visible: true,
+          defaultValue: getFormattedNow(),
         },
         {
           field: "phone",
@@ -149,7 +154,7 @@ class MessageList extends HTMLElement {
               phoneObj = new ej.dropdowns.DropDownList({
                 dataSource: window.allContacts, // Use window.allContacts as the data source
                 fields: { text: "number", value: "number" }, // Map text and value fields
-                value: args.rowData.phone, // Set the initial value if editing
+                value: args.rowData.phone ?? "60184644305", // Set the initial value if editing
                 placeholder: "Select a contact",
                 floatLabelType: "Never",
                 allowFiltering: true,
@@ -245,16 +250,6 @@ class MessageList extends HTMLElement {
         grid.refresh();
       }
     });
-  }
-
-  showNotification(message, type) {
-    const notification = document.createElement("div");
-    notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white ${
-      type === "success" ? "bg-green-500" : "bg-red-500"
-    }`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
   }
 
   render() {

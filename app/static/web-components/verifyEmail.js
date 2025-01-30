@@ -37,7 +37,7 @@ class VerifyEmailForm extends HTMLElement {
         const response = await fetch("/api/verify-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ verificationCode })
+          body: JSON.stringify({ verificationCode }),
         });
 
         const data = await response.json();
@@ -60,13 +60,7 @@ class VerifyEmailForm extends HTMLElement {
   }
 
   showNotification(message, type) {
-    const notification = document.createElement("div");
-    notification.className = `fixed top-4 right-4 p-4 rounded-lg glass text-white ${
-      type === "success" ? "bg-green-500/20" : "bg-red-500/20"
-    }`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
+    showNotification(message, type);
   }
 }
 

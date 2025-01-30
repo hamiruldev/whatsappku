@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from config import config
 import os
+from app.controllers.scheduler import scheduler
 
 def create_app():
     # Get environment from FLASK_ENV, default to 'development'
@@ -17,10 +18,15 @@ def create_app():
         # Import and register routes
         from app.routes import register_routes
         register_routes(app)
-
-        # Initialize scheduler
-        from app.controllers.scheduler import initialize_scheduler
-        initialize_scheduler(app)
-        print(f"Scheduler initialized in {env} environment")
-
+        
+        # Start the scheduler
+        if not scheduler.running:
+            scheduler.start()
+            
+    @app.before_first_request
+    def init_scheduler():
+        # Ensure scheduler is running
+        if not scheduler.running:
+            scheduler.start()
+            
     return app

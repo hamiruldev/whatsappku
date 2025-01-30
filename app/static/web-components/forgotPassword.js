@@ -37,7 +37,7 @@ class ForgotPassword extends HTMLElement {
         const response = await fetch("/api/forgot-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ email }),
         });
 
         const data = await response.json();
@@ -60,13 +60,7 @@ class ForgotPassword extends HTMLElement {
   }
 
   showNotification(message, type) {
-    const notification = document.createElement("div");
-    notification.className = `fixed top-4 right-4 p-4 rounded-lg glass text-white ${
-      type === "success" ? "bg-green-500/20" : "bg-red-500/20"
-    }`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
+    showNotification(message, type);
   }
 }
 customElements.define("forgot-password", ForgotPassword);

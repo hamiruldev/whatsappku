@@ -24,9 +24,9 @@ def schedule_gold_price_updates():
             WhatsAppController.post_status(temp_path)
     
     # Schedule to run every day at 9 AM
-    scheduler.add_job(
-        update_and_send,
-        'cron',
-        hour=9,
-        minute=0
-    )
+    # scheduler.add_job(
+    #     update_and_send,
+    #     'cron',
+    #     hour=9,
+    #     minute=0
+    # )
