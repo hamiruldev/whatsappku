@@ -100,6 +100,8 @@
             {% endblock %}
         </main>
 
+        <div id="SharedDialog"></div>
+
         <footer class="glass mt-auto">
             <div class="container mx-auto px-6 py-4">
                 <p class="text-white text-center">© 2025 MyApp</p>
@@ -109,6 +111,22 @@
 
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/helpers.js"></script>
+
+
+    <script>
+        //Initialize Dialog control
+        var dialog = new ej.popups.Dialog({
+            header: 'Dialog',
+            showCloseIcon: true,
+            content: 'This is a Dialog with content',
+            width: '450px',
+            visible: false,
+            target: document.body
+        });
+        
+        // Render initialized Dialog
+        dialog.appendTo('#SharedDialog');
+    </script>
 
 
     {% block scripts %}{% endblock %}

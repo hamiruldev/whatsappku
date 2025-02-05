@@ -179,7 +179,7 @@ class WhatsAppAPI:
         return requests.get(url, params=params) 
     
     @staticmethod
-    def check_session_status():
+    def check_sessions_status():
         """
         Check the current session status.
         Returns: tuple (bool, dict) - (is_valid, session_data)
@@ -191,6 +191,26 @@ class WhatsAppAPI:
             if response.status_code == 200:
                 session_data = response.json()
                 
+                return session_data
+            
+            current_app.logger.error(f"Session status check failed with status code: {response.status_code}")
+            return False, {'error': f'Status check failed with status {response.status_code}'}
+            
+        except Exception as e:
+            current_app.logger.error(f"Error checking session status: {str(e)}")
+            return False, {'error': str(e)}
+    @staticmethod
+    def check_session_status(session_name):
+        """
+        Check the current session status.
+        Returns: tuple (dict) - (session_data)
+        """
+        try:
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/{session_name}"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                session_data = response.json()
                 return session_data
             
             current_app.logger.error(f"Session status check failed with status code: {response.status_code}")
@@ -314,8 +334,15 @@ class WhatsAppAPI:
             return False, {'error': f"Request error: {str(e)}"}
 
     @staticmethod
-    def get_screenshot():
+    def get_screenshot(session_name):
         """Get a screenshot of the current session"""
-        url = f"{current_app.config['WAHA_API_URL']}/api/sessions/session/screenshot"
+        url = f"{current_app.config['WAHA_API_URL']}/api/screenshot?session={session_name}"
+        response = requests.get(url, timeout=10)
+        return response.status_code == 200, response.json()
+
+    @staticmethod
+    def get_qrcode(session_name):
+        """Get a qrcpde of the current session"""
+        url = f"{current_app.config['WAHA_API_URL']}/api/{session_name}/auth/qr?format=image"
         response = requests.get(url, timeout=10)
         return response.status_code == 200, response.json()

@@ -118,11 +118,23 @@ def register_routes(app):
         }), 200 if is_healthy else 503
         
     @app.route('/api/sessions', methods=['GET'])
-    def check_session_status():
+    def check_sessions_status():
         """Endpoint to manually check WAHA session status"""
         from app.services.whatsapp_api import WhatsAppAPI
         
-        session_data = WhatsAppAPI.check_session_status()
+        session_data = WhatsAppAPI.check_sessions_status()
+        
+        return jsonify({
+            'timestamp': datetime.now().isoformat(),
+            'details': session_data
+        }), 200
+
+    @app.route('/api/session/<session_name>', methods=['GET'])
+    def check_session_status(session_name):
+        """Endpoint to manually check WAHA session status"""
+        from app.services.whatsapp_api import WhatsAppAPI
+        
+        session_data = WhatsAppAPI.check_session_status(session_name)
         
         return jsonify({
             'timestamp': datetime.now().isoformat(),
@@ -188,11 +200,26 @@ def register_routes(app):
 
         return jsonify(result), 200 if success else 400
 
-    @app.route('/api/session/screenshot', methods=['GET'])
-    def get_screenshot():
+    @app.route('/api/session/screenshot/<session_name>', methods=['GET'])
+    def get_screenshot(session_name):
         """Get session screenshot"""
         from app.services.whatsapp_api import WhatsAppAPI
-        success, result = WhatsAppAPI.get_screenshot()
+
+        success, result = WhatsAppAPI.get_screenshot(session_name)
+        return jsonify(result), 200 if success else 400
+
+    @app.route('/api/session/auth/qr', methods=['POST'])
+    def get_qrcode():
+        """Get qrcode """
+        from app.services.whatsapp_api import WhatsAppAPI
+    
+        data = request.get_json()  # Use `get_json()` to handle missing JSON body safely
+        if not data or 'name' not in data:
+            return jsonify({'error': 'Session name is required'}), 400
+
+        session_name = data['name']
+
+        success, result = WhatsAppAPI.get_qrcode(session_name)
         return jsonify(result), 200 if success else 400
 
     @app.route('/webhook', methods=['POST'])

@@ -19,16 +19,17 @@ function showNotification(message, type) {
 function positionNotification(notification) {
   const isMobile = window.innerWidth <= 768;
 
+  notification.style.zIndex = "1";
   // Styles for mobile (bottom center)
   if (isMobile) {
     notification.style.position = "fixed";
-    notification.style.bottom = "100px";
+    notification.style.bottom = "2dvh";
     notification.style.left = "50%";
     notification.style.transform = "translateX(-50%)";
   } else {
     // Styles for desktop (bottom right)
     notification.style.position = "fixed";
-    notification.style.bottom = "20px";
+    notification.style.bottom = "2dvh";
     notification.style.right = "30%";
   }
 }
@@ -39,7 +40,7 @@ function updateTimeToDate(arr) {
 
     return {
       ...item,
-      time: new Date(year, month - 1, day, hour, minute), // Create new Date object
+      time: new Date(year, month - 1, day, hour, minute) // Create new Date object
     };
   });
 }
@@ -65,4 +66,23 @@ function replaceCusInMeId(data) {
 
 function addSuffix(text) {
   return text.endsWith("@c.us") ? text : text + "@c.us";
+}
+
+// Convert binary data to base64 in browser
+function convertToBase64(buffer) {
+  try {
+    const binary = String.fromCharCode.apply(null, new Uint8Array(buffer));
+    return btoa(binary); // btoa() encodes the string to base64
+  } catch (error) {
+    console.error("Error converting to base64:", error);
+    return "";
+  }
+}
+
+function isMobile() {
+  const isMobileUserAgent = /Mobi|Android|iPhone|iPad|iPod/i.test(
+    navigator.userAgent
+  );
+  const isSmallScreen = window.innerWidth <= 768; // Common breakpoint for mobile screens
+  return isMobileUserAgent || isSmallScreen;
 }

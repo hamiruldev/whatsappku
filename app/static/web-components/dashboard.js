@@ -12,8 +12,7 @@ class DashboardContainer extends HTMLElement {
           <message-list></message-list>
           <total-contacts></total-contacts>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 }
 class TotalContacts extends HTMLElement {
@@ -150,121 +149,8 @@ class UserProfile extends HTMLElement {
   }
 }
 
-// class MessageList extends HTMLElement {
-//   connectedCallback() {
-//     this.innerHTML = `
-//       <div class="glass rounded-2xl p-6 shadow-lg bg-gradient-to-r from-blue-800 via-blue-600 to-blue-400">
-//         <h2 class="text-2xl font-bold text-white mb-4">Auto Messages</h2>
-//         <div id="grid"></div>
-
-//         <script type="text/x-template" id="enabledTemplate" >
-//            <input id="enable-button" type="checkbox" />
-//         </script>
-
-//       </div>
-//     `;
-
-//     this.renderGrid();
-//   }
-
-//   renderGrid() {
-//     const messages = JSON.parse(localStorage.getItem("autoMessages")) || [];
-
-//     function renderCell(args) {
-//       var inputElement = args.cell.querySelector("input#enable-button");
-
-//       var switchObj = new ej.buttons.Switch({
-//         cssClass: "e-togglebutton",
-//         change: (args) => {
-//           console.log(args);
-//         },
-//       });
-
-//       switchObj.appendTo(inputElement);
-//     }
-
-//     const grid = new ej.grids.Grid({
-//       dataSource: messages,
-//       enableAdaptiveUI: false,
-//       allowResizing: true,
-//       queryCellInfo: renderCell,
-//       toolbar: ["Add", "Edit", "Delete", "Update", "Cancel"],
-//       editSettings: {
-//         allowEditing: true,
-//         allowAdding: true,
-//         allowDeleting: true,
-//         mode: "Dialog",
-//       },
-//       columns: [
-//         {
-//           field: "id",
-//           headerText: "ID",
-//           isPrimaryKey: true,
-//           textAlign: "Left",
-//           width: 100,
-//           visible: false, // Hide ID in edit/create modes
-//         },
-//         {
-//           field: "time",
-//           headerText: "Time",
-//           textAlign: "Left",
-//           width: 150,
-//           type: "datetime",
-//           editType: "datetimepickeredit",
-//           format: "dd/MM/yyyy hh:mm",
-//         },
-//         {
-//           field: "phone",
-//           headerText: "Phone Number",
-//           textAlign: "Left",
-//           width: 150,
-//         },
-//         {
-//           field: "message",
-//           headerText: "Message",
-//           textAlign: "Left",
-//           width: 300,
-//         },
-//         {
-//           field: "enabled",
-//           headerText: "Enabled",
-//           textAlign: "Center",
-//           width: 150,
-//           template: "#enabledTemplate",
-//         },
-//       ],
-//       actionComplete: (args) => {
-//         if (args.requestType === "save" || args.requestType === "delete") {
-//           const updatedMessages = grid.dataSource;
-//           localStorage.setItem("autoMessages", JSON.stringify(updatedMessages));
-//         }
-//       },
-//       dataBound: () => {
-//         // Initialize the Syncfusion Toggle Button for each row
-//         messages.forEach((data) => {
-//           const toggleButton = new ej.buttons.Button({
-//             isPrimary: true,
-//             content: data.enabled ? "Enabled" : "Disabled",
-//             cssClass: data.enabled ? "e-success" : "e-danger",
-//             onClick: (event) => {
-//               data.enabled = !data.enabled; // Toggle enabled state
-//               localStorage.setItem("autoMessages", JSON.stringify(messages));
-//               toggleButton.content = data.enabled ? "Enabled" : "Disabled";
-//               toggleButton.cssClass = data.enabled ? "e-success" : "e-danger";
-//             },
-//           });
-//           toggleButton.appendTo(`#toggleButton${data?.id}`);
-//         });
-//       },
-//     });
-
-//     grid.appendTo("#grid");
-//   }
-// }
-
 customElements.define("dashboard-container", DashboardContainer);
 customElements.define("total-contacts", TotalContacts);
 customElements.define("running-automations", RunningAutomations);
 customElements.define("application-settings", ApplicationSettings);
 customElements.define("user-profile", UserProfile);
-// customElements.define("message-list", MessageList);
