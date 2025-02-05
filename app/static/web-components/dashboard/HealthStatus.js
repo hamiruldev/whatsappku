@@ -24,7 +24,6 @@ class HealthStatus extends HTMLElement {
     try {
       const response = await fetch("/api/health");
       const data = await response.json();
-      console.log(data);
       this.health = {
         healthy: data.healthy,
         lastCheck: new Date(data.timestamp),
@@ -47,8 +46,6 @@ class HealthStatus extends HTMLElement {
   render() {
     const statusClass = this.health.healthy ? "bg-green-500" : "bg-red-500";
     const statusText = this.health.healthy ? "Healthy" : "Unhealthy";
-
-    console.log(this.health);
 
     this.innerHTML = `
             <div class="glass rounded-2xl p-6 shadow-lg">

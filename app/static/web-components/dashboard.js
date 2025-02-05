@@ -8,9 +8,9 @@ class DashboardContainer extends HTMLElement {
         <div class="p-3 flex flex-col space-y-6">
           <health-status></health-status>
           <session-manager></session-manager>
-          <total-contacts></total-contacts>
           <scheduler-settings></scheduler-settings>
           <message-list></message-list>
+          <total-contacts></total-contacts>
         </div>
       </div>
     `;
@@ -40,10 +40,9 @@ class TotalContacts extends HTMLElement {
         `/api/contacts?contactId=${encodeURIComponent(contactId)}`
       );
       const data = await response.json();
-      console.log("Specific Contact:", data.error);
 
       if (data.error) {
-        this.querySelector(".contact-count").textContent = "Error";
+        this.querySelector(".contact-count").textContent = "-";
         return;
       }
       // Update the UI and save in localStorage

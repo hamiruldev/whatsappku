@@ -147,10 +147,10 @@ def register_routes(app):
         """Create a new session"""
         from app.services.whatsapp_api import WhatsAppAPI
         data = request.json
-        success, result = WhatsAppAPI.create_session(data.get('name'))
-        return jsonify(result), 200 if success else 400
+        success, result = WhatsAppAPI.create_session(data)
+        return jsonify(result), 201 if success else 400
 
-    @app.route('/api/session/delete', methods=['DELETE'])
+    @app.route('/api/session/delete', methods=['POST'])
     def delete_session():
         """Delete a session"""
         from app.services.whatsapp_api import WhatsAppAPI
@@ -162,14 +162,16 @@ def register_routes(app):
     def start_session():
         """Start the session"""
         from app.services.whatsapp_api import WhatsAppAPI
-        success, result = WhatsAppAPI.start_session()
+        data = request.json
+        success, result = WhatsAppAPI.start_session(data.get('name'))
         return jsonify(result), 200 if success else 400
 
     @app.route('/api/session/stop', methods=['POST'])
     def stop_session():
         """Stop the session"""
         from app.services.whatsapp_api import WhatsAppAPI
-        success, result = WhatsAppAPI.stop_session()
+        data = request.json
+        success, result = WhatsAppAPI.stop_session(data.get('name'))
         return jsonify(result), 200 if success else 400
 
     @app.route('/api/session/restart', methods=['POST'])

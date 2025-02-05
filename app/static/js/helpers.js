@@ -47,3 +47,22 @@ function updateTimeToDate(arr) {
 function getFormattedNow() {
   return new Date();
 }
+
+function replaceCusInMeId(data) {
+  // Check if the data has the 'details' array
+  if (data && Array.isArray(data.details)) {
+    // Iterate through each session in the 'details' array
+    data.details.forEach((session) => {
+      // Check if the session has a 'me' object and 'me.id' field
+      if (session.me && session.me.id) {
+        // Replace '@c.us' with an empty string
+        session.me.id = session.me.id.replace("@c.us", "");
+      }
+    });
+  }
+  return data; // Return the modified data
+}
+
+function addSuffix(text) {
+  return text.endsWith("@c.us") ? text : text + "@c.us";
+}

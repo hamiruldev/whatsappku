@@ -228,49 +228,71 @@ class WhatsAppAPI:
             return False, {'error': str(e)}
 
     @staticmethod
-    def create_session(session_name):
-        """Create a new session with webhook configuration"""
+    def create_session(data):
+        """Create a new session"""
         try:
-            # Configure webhook first
-            from app.services.webhook_service import WebhookService
-            webhook_success, _ = WebhookService.configure_webhook(session_name)
-            
-            if not webhook_success:
-                current_app.logger.warning("Failed to configure webhook, continuing with session creation")
-            
-            # Create session
             url = f"{current_app.config['WAHA_API_URL']}/api/sessions"
-            response = requests.post(url, json={'name': session_name}, timeout=10)
-            return response.status_code == 200, response.json()
+            payload = {
+                "name": data.get('name'),
+                "start": data.get('start'),
+            }
+            
+            response = requests.post(url, json=payload, timeout=30)
+            
+            if response.status_code == 201:
+                return True, response.json()
+            else:
+                current_app.logger.error(f"Failed to create session: {response.text}")
+                return False, {'error': f'Failed to create session: {response.text}'}
             
         except Exception as e:
+            current_app.logger.error(f"Error creating session: {str(e)}")
             return False, {'error': str(e)}
 
     @staticmethod
     def delete_session(session_name):
         """Delete a session"""
         try:
-            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/{session_name}"
-            response = requests.delete(url, timeout=10)
-            return response.status_code == 200, response.json()
+            # First stop the session
+            stop_url = f"{current_app.config['WAHA_API_URL']}/api/sessions/{session_name}/stop"
+            stop_response = requests.post(stop_url, timeout=10)
+            
+            if stop_response.status_code != 200:
+                current_app.logger.warning(f"Failed to stop session before deletion: {stop_response.text}")
+            
+            # Then delete the session
+            delete_url = f"{current_app.config['WAHA_API_URL']}/api/sessions/{session_name}"
+            delete_response = requests.delete(delete_url, timeout=10)
+            
+            # Handle empty response
+            if delete_response.status_code == 200:
+                try:
+                    return True, delete_response.json()
+                except ValueError:  # JSON decoding failed
+                    return True, {'message': 'Session deleted successfully'}
+            else:
+                current_app.logger.error(f"Failed to delete session: {delete_response.text}")
+                return False, {'error': f'Failed to delete session: {delete_response.text}'}
+            
         except Exception as e:
+            current_app.logger.error(f"Error deleting session: {str(e)}")
             return False, {'error': str(e)}
 
     @staticmethod
-    def start_session():
+    def start_session(session_name):
         """Start the session"""
         try:
-            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/session/start"
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/{session_name}/start"
             response = requests.post(url, timeout=10)
-            return response.status_code == 200, response.json()
+            return response.status == "SCAN_QR_CODE", response.json()
         except Exception as e:
             return False, {'error': str(e)}
 
     @staticmethod
-    def stop_session():
+    def stop_session(session_name):
         """Stop the session"""
         try:
-            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/session/stop"
+            url = f"{current_app.config['WAHA_API_URL']}/api/sessions/{session_name}/stop"
             response = requests.post(url, timeout=10)
             return response.status_code == 200, response.json()
         except Exception as e:
