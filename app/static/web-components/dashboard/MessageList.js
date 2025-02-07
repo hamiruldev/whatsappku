@@ -151,7 +151,7 @@ class MessageList extends HTMLElement {
               phoneObj.destroy();
             },
             write: function (args) {
-              phoneObj = new ej.dropdowns.DropDownList({
+              phoneObj = new ej.dropdowns.AutoComplete({
                 dataSource: window.allContacts, // Use window.allContacts as the data source
                 fields: { text: "number", value: "number" }, // Map text and value fields
                 value: args.rowData.phone ?? "60184644305", // Set the initial value if editing
