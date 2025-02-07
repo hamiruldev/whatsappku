@@ -1,5 +1,5 @@
-from flask import render_template, request, jsonify
-from app.controllers import whatsapp
+from flask import current_app, render_template, request, jsonify
+from app.controllers import scheduler, whatsapp
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 
