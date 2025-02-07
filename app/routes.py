@@ -275,3 +275,17 @@ def register_routes(app):
                 'args': job.args
             })
         return jsonify(jobs)
+
+    @app.route('/api/message/send', methods=['POST'])
+    def send_test_message():
+        from app.services.whatsapp_api import WhatsAppAPI
+        data = request.json
+        
+        try:
+            response = WhatsAppAPI.send_text(
+                chat_id=data['phone'],
+                text=data['message']
+            )
+            return jsonify({'success': True, 'message': 'Message sent successfully'}), 200
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 400

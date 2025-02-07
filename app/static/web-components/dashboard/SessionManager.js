@@ -8,6 +8,9 @@ class SessionManager extends HTMLElement {
     this.restartAttempts = {};
     this.nextSessionNumber = 1;
     this.ws = null;
+
+    // Add event listener for dialog-click
+    this.addEventListener("dialog-click", this.handleGridClick.bind(this));
   }
 
   async connectedCallback() {
@@ -46,7 +49,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch("/api/session/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName })
+        body: JSON.stringify({ name: sessionName }),
       });
 
       const result = await response.json();
@@ -70,7 +73,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch("/api/session/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName, start: true })
+        body: JSON.stringify({ name: sessionName, start: true }),
       });
 
       const result = await response.json();
@@ -91,7 +94,7 @@ class SessionManager extends HTMLElement {
       // checksessionexist first
       return await this.checkSession(sessionName).then(async (res) => {
         const response = await fetch(`/api/session/screenshot/${sessionName}`, {
-          method: "GET"
+          method: "GET",
         });
 
         const result = await response.json();
@@ -154,7 +157,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch("/api/session/restart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: session.name })
+        body: JSON.stringify({ name: session.name }),
       });
 
       const result = await response.json();
@@ -198,7 +201,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName })
+        body: JSON.stringify({ name: sessionName }),
       });
 
       const message = response.ok
@@ -221,32 +224,45 @@ class SessionManager extends HTMLElement {
 
   render() {
     this.innerHTML = `
-
-    <style>
-    
-    qr-code-image{
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-    }
-    
-    </style>
-
-    
-      <div class="glass rounded-2xl p-6 shadow-lg">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-white">Sessions</h2>
-          
-          <button id="newButtonSession" class="e-tbar-btn e-tbtn-txt e-control e-btn e-lib" type="button" style="width: auto;">
-            <span class="e-btn-icon e-plus e-icons e-icon-left"></span>
-            <span class="e-tbar-btn-text">New</span>
-          </button>
-
+        <style>
+            .session-manage-dialog {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+            .qr-container, .screenshot-container, .test-message-container, .schedules-container {
+                padding: 20px 0px;
+                height: 100%;
+                overflow: auto;
+            }
+            .qr-image, .screenshot-image {
+                max-width: 100%;
+                margin-bottom: 20px;
+            }
+            .input-group {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            #testMessage {
+                min-height: 100px;
+            }
+            .manage-btn {
+                padding: 5px 10px;
+                cursor: pointer;
+            }
+        </style>
+        <div class="glass rounded-2xl p-6 shadow-lg">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white">Sessions</h2>
+                <button id="newButtonSession" class="e-tbar-btn e-tbtn-txt e-control e-btn e-lib" type="button">
+                    <span class="e-btn-icon e-plus e-icons e-icon-left"></span>
+                    <span class="e-tbar-btn-text">New</span>
+                </button>
+            </div>
+            <div id="sessionsGrid" class="mt-4"></div>
         </div>
-        <div id="sessionsGrid" class="mt-4"></div>
-      </div>
+        <div id="managementDialog"></div>
     `;
   }
 
@@ -264,6 +280,7 @@ class SessionManager extends HTMLElement {
       dataSource: this.sessions,
       allowPaging: true,
       allowResizing: true,
+      allowSorting: true,
       pageSettings: { pageSize: 10 },
       height: "100%",
       enableAdaptiveUI: isMobile() ? true : false,
@@ -273,12 +290,12 @@ class SessionManager extends HTMLElement {
         allowAdding: true,
         allowEditing: false,
         allowDeleting: true,
-        mode: "Dialog"
+        mode: "Dialog",
       },
       width: "100%",
       columns: this.getGridColumns(),
       actionBegin: this.handleActionBegin.bind(this),
-      actionComplete: this.handleActionComplete.bind(this)
+      actionComplete: this.handleActionComplete.bind(this),
     });
 
     grid.appendTo(this.querySelector("#sessionsGrid"));
@@ -302,34 +319,39 @@ class SessionManager extends HTMLElement {
         headerText: "Name",
         width: 120,
         textAlign: "Left",
-        allowEditing: false
+        allowEditing: false,
+        allowSorting: true,
       },
       {
         field: "me.id",
         headerText: "Phone (ex: 60184644305)",
-        width: 200,
-        allowEditing: true
+        width: 170,
+        allowEditing: true,
+        allowSorting: true,
       },
       {
         field: "status",
         headerText: "Status",
         width: 150,
-        allowEditing: false
+        allowEditing: false,
+        visible: true,
+        allowSorting: true,
+        allowFiltering: true,
       },
       {
         field: "server",
         headerText: "Server",
         width: 120,
         allowEditing: false,
-        visible: false
+        visible: false,
       },
       {
         field: "actions",
         headerText: "Actions",
-        width: 200,
-        allowEditing: false,
-        visible: false
-      }
+        width: 120,
+        template:
+          "<dialog-button session-name='${name}' session-status='${status}'></dialog-button>",
+      },
     ];
   }
 
@@ -375,6 +397,12 @@ class SessionManager extends HTMLElement {
   }
 
   async handleGridClick(event) {
+    // Handle dialog-click event from DialogButton component
+    if (event.type === "dialog-click") {
+      await this.showManageDialog(event.detail.sessionName);
+      return;
+    }
+
     const button = event.target.closest("button");
     if (!button) return;
 
@@ -500,6 +528,253 @@ class SessionManager extends HTMLElement {
       this.ws.close();
     }
   }
+
+  async showManageDialog(sessionName) {
+    const dialogHtml = `
+      <div class="session-manage-dialog">
+        <div class="e-tab-header">
+          <div class="e-tab-text">Screenshot</div>
+          <div class="e-tab-text">Schedules</div>
+          <div class="e-tab-text">Test Message</div>
+        </div>
+        <div class="e-content">
+          <div class="e-item">
+            <div class="qr-container">
+              <qr-code-image sessionName="${sessionName}"></qr-code-image>
+            </div>
+          </div>
+      
+    
+
+          <div class="e-item">
+            <div class="schedules-container">
+              <message-list></message-list>
+            </div>
+          </div>
+
+          <div class="e-item">
+            <div class="test-message-container">
+              <div class="input-group">
+                <input type="text" id="testPhone" class="e-input" placeholder="Phone Number" />
+                <textarea id="testMessage" class="e-input" placeholder="Test Message"></textarea>
+                <button class="e-btn e-primary send-test">Send Test Message</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    // Create dialog
+    const dialog = new ej.popups.Dialog({
+      header: `Manage Session: ${sessionName}`,
+      content: dialogHtml,
+      showCloseIcon: true,
+      isModal: true,
+      width: "90%",
+      height: "90%",
+      visible: false,
+      close: () => {
+        dialog.destroy();
+      },
+    });
+
+    // Create tab
+    const tab = new ej.navigations.Tab({
+      items: [
+        { header: { text: "Screenshot" }, content: ".qr-container" },
+        { header: { text: "Schedules" }, content: ".schedules-container" },
+        {
+          header: { text: "Test Message" },
+          content: ".test-message-container",
+        },
+      ],
+      selected: (args) => this.handleTabChange(args, sessionName),
+    });
+
+    // Append dialog to body and show it
+    dialog.appendTo("#managementDialog");
+    dialog.show(1);
+
+    // Initialize tab after dialog is shown
+    tab.appendTo(".session-manage-dialog");
+
+    // Add event listeners
+    this.setupManageDialogEvents(dialog, sessionName);
+  }
+
+  handleTabChange(args, sessionName) {
+    const selectedTab = args.selectedIndex;
+    switch (selectedTab) {
+      case 0:
+        this.loadQRCode(sessionName);
+        break;
+      case 1:
+        this.loadScreenshot(sessionName);
+        break;
+      // case 2:
+      //   this.initializeSchedulesGrid(sessionName);
+      //   break;
+    }
+  }
+
+  async loadQRCode(sessionName) {
+    try {
+      const response = await fetch(`/api/session/auth/qr`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: sessionName }),
+      });
+      const data = await response.json();
+      if (data.qrCode) {
+        document.getElementById(
+          "qrImage"
+        ).src = `data:image/png;base64,${data.qrCode}`;
+      }
+    } catch (error) {
+      console.error("Error loading QR code:", error);
+    }
+  }
+
+  async loadScreenshot(sessionName) {
+    try {
+      const response = await fetch(`/api/session/screenshot/${sessionName}`);
+      const data = await response.json();
+      if (data.screenshot) {
+        document.getElementById(
+          "screenshotImage"
+        ).src = `data:image/png;base64,${data.screenshot}`;
+      }
+    } catch (error) {
+      console.error("Error loading screenshot:", error);
+    }
+  }
+
+  setupManageDialogEvents(dialog, sessionName) {
+    // QR Code refresh
+    dialog.element
+      .querySelector(".refresh-qr")
+      .addEventListener("click", () => {
+        this.loadQRCode(sessionName);
+      });
+
+    // Screenshot refresh
+    dialog.element
+      .querySelector(".refresh-screenshot")
+      .addEventListener("click", () => {
+        this.loadScreenshot(sessionName);
+      });
+
+    // Send test message
+    dialog.element
+      .querySelector(".send-test")
+      .addEventListener("click", async () => {
+        const phone = dialog.element.querySelector("#testPhone").value;
+        const message = dialog.element.querySelector("#testMessage").value;
+        await this.sendTestMessage(sessionName, phone, message);
+      });
+  }
+
+  async sendTestMessage(sessionName, phone, message) {
+    try {
+      const response = await fetch("/api/message/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session: sessionName,
+          phone,
+          message,
+        }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        showNotification("Test message sent successfully", "success");
+      } else {
+        showNotification("Failed to send test message", "error");
+      }
+    } catch (error) {
+      showNotification("Error sending test message", "error");
+    }
+  }
+
+  initializeSchedulesGrid(sessionName) {
+    if (document.querySelector("#schedulesGrid").ej2_instances?.[0]) {
+      document.querySelector("#schedulesGrid").ej2_instances[0].destroy();
+    }
+
+    const grid = new ej.grids.Grid({
+      dataSource: [],
+      columns: [
+        { field: "time", headerText: "Time", width: 120 },
+        { field: "phone", headerText: "Phone", width: 150 },
+        { field: "message", headerText: "Message", width: 200 },
+      ],
+    });
+    grid.appendTo("#schedulesGrid");
+    this.loadSchedules(sessionName, grid);
+  }
+
+  async loadSchedules(sessionName, grid) {
+    try {
+      const response = await fetch("/api/scheduled-messages");
+      const data = await response.json();
+      grid.dataSource = data;
+    } catch (error) {
+      console.error("Error loading schedules:", error);
+    }
+  }
 }
 
 customElements.define("session-manager", SessionManager);
+
+class DialogButton extends HTMLElement {
+  constructor() {
+    super();
+    this.sessionName = this.getAttribute("session-name");
+    this.sessionStatus = this.getAttribute("session-status");
+  }
+
+  connectedCallback() {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  render() {
+    // <p class="text-sm text-gray-500">${this.sessionStatus}</p>
+    this.innerHTML = `
+    <div class="flex flex-row items-center justify-between">
+      <button class="manage-btn e-control e-btn e-lib e-primary" data-session="${this.sessionName}">
+        <span>Manage</span>
+      </button>
+    </div>
+    `;
+  }
+
+  setupEventListeners() {
+    this.querySelector("button").addEventListener("click", () => {
+      // Dispatch custom event that SessionManager will listen for
+      this.dispatchEvent(
+        new CustomEvent("dialog-click", {
+          bubbles: true,
+          detail: { sessionName: this.sessionName },
+        })
+      );
+    });
+  }
+
+  static get observedAttributes() {
+    return ["session-name"];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === "session-name") {
+      this.sessionName = newValue;
+      if (this.isConnected) {
+        this.render();
+      }
+    }
+  }
+}
+
+customElements.define("dialog-button", DialogButton);

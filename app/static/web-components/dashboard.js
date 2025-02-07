@@ -9,8 +9,6 @@ class DashboardContainer extends HTMLElement {
           <health-status></health-status>
           <session-manager></session-manager>
           <scheduler-settings></scheduler-settings>
-          <message-list></message-list>
-          <total-contacts></total-contacts>
         </div>
       </div>`;
   }

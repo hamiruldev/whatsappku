@@ -21,6 +21,7 @@ class QrCodeImage extends HTMLElement {
           align-items: center;
           gap: 1rem;
           width: 100%;
+          max-width: 100%;
         }
         #refresh-button {
           margin-left: auto;
