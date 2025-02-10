@@ -8,8 +8,14 @@ def create_app():
     # Get environment from FLASK_ENV, default to 'development'
     env = os.getenv('FLASK_ENV', 'development')
     
-    app = Flask(__name__)
-    CORS(app)
+    app = Flask(__name__, 
+                static_folder='static',
+                static_url_path='/static')
+    
+    # Enable CORS
+    CORS(app, resources={
+        r"/static/*": {"origins": "*"}
+    })
     
     # Use the appropriate config class based on environment
     app.config.from_object(config[env])

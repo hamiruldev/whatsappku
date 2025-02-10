@@ -209,7 +209,7 @@ class SessionManager extends HTMLElement {
         : `Failed to ${action} session ${sessionName}`;
 
       showNotification(message, response.ok ? "success" : "error");
-      await this.refreshSessions();
+        await this.refreshSessions();
     } catch (error) {
       showNotification(
         `Error ${action}ing session ${sessionName}: ${error.message}`,
@@ -257,18 +257,18 @@ class SessionManager extends HTMLElement {
                 cursor: pointer;
             }
         </style>
-        <div class="glass rounded-2xl p-6 shadow-lg">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-white">Sessions</h2>
+            <div class="glass rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-white">Sessions</h2>
                 <button id="newButtonSession" class="e-tbar-btn e-tbtn-txt e-control e-btn e-lib" type="button">
                     <span class="e-btn-icon e-plus e-icons e-icon-left"></span>
                     <span class="e-tbar-btn-text">New</span>
                 </button>
+                </div>
+                <div id="sessionsGrid" class="mt-4"></div>
             </div>
-            <div id="sessionsGrid" class="mt-4"></div>
-        </div>
         <div id="managementDialog"></div>
-    `;
+        `;
   }
 
   setupGrid() {
@@ -319,40 +319,40 @@ class SessionManager extends HTMLElement {
 
   getGridColumns() {
     return [
-      {
-        field: "name",
-        headerText: "Name",
-        width: 120,
-        textAlign: "Left",
-        allowEditing: false,
+        {
+          field: "name",
+          headerText: "Name",
+          width: 120,
+          textAlign: "Left",
+          allowEditing: false,
         allowSorting: true,
-      },
-      {
-        field: "me.id",
-        headerText: "Phone (ex: 60184644305)",
+        },
+        {
+          field: "me.id",
+          headerText: "Phone (ex: 60184644305)",
         width: 170,
-        allowEditing: true,
+          allowEditing: true,
         allowSorting: true,
-      },
-      {
-        field: "status",
-        headerText: "Status",
+        },
+        {
+          field: "status",
+          headerText: "Status",
         width: 150,
-        allowEditing: false,
+          allowEditing: false,
         visible: true,
         allowSorting: true,
         allowFiltering: true,
-      },
-      {
-        field: "server",
-        headerText: "Server",
-        width: 120,
-        allowEditing: false,
+        },
+        {
+          field: "server",
+          headerText: "Server",
+          width: 120,
+          allowEditing: false,
         visible: false,
-      },
-      {
-        field: "actions",
-        headerText: "Actions",
+        },
+        {
+          field: "actions",
+          headerText: "Actions",
         width: 120,
         template:
           "<dialog-button session-name='${name}' session-status='${status}'></dialog-button>",
@@ -361,15 +361,15 @@ class SessionManager extends HTMLElement {
   }
 
   async handleActionBegin(args) {
-    if (args.requestType === "add" || args.requestType === "beginEdit") {
+        if (args.requestType === "add" || args.requestType === "beginEdit") {
       this.toggleGridColumnVisibility(false);
-    }
+        }
 
-    if (args.requestType === "delete") {
+        if (args.requestType === "delete") {
       await this.deleteSession(args.data[0].name);
-    }
+        }
 
-    if (args.requestType === "save" && args.action === "add") {
+        if (args.requestType === "save" && args.action === "add") {
       await this.createSession().then((res) => {
         this.newPhoneRegister = args.data.me.id;
         this.newSessionRegister = res.name;
@@ -390,15 +390,14 @@ class SessionManager extends HTMLElement {
       this.grid.refresh();
     }
 
-    if (args.requestType === "add") {
-      debugger;
+        if (args.requestType === "add") {
       // args.dialog.header = "Add Session";
-      args.dialog.allowDragging = false;
-    }
+          args.dialog.allowDragging = false;
+        }
 
-    if (args.requestType === "beginEdit") {
+        if (args.requestType === "beginEdit") {
       // args.dialog.header = "Edit Session";
-      args.dialog.allowDragging = false;
+          args.dialog.allowDragging = false;
     }
   }
 
@@ -410,20 +409,20 @@ class SessionManager extends HTMLElement {
     }
 
     const button = event.target.closest("button");
-    if (!button) return;
+      if (!button) return;
 
-    const row = this.grid.getRowObjectFromUID(
+      const row = this.grid.getRowObjectFromUID(
       button.closest("tr")?.getAttribute("data-uid")
-    )?.data;
+      )?.data;
 
-    if (!row) return;
+      if (!row) return;
 
     if (button.classList.contains("start-btn")) {
-      await this.startSession(row.name);
-    } else if (button.classList.contains("restart-btn")) {
+        await this.startSession(row.name);
+      } else if (button.classList.contains("restart-btn")) {
       await this.restartSession(row);
-    } else if (button.classList.contains("stop-btn")) {
-      await this.stopSession(row.name);
+      } else if (button.classList.contains("stop-btn")) {
+        await this.stopSession(row.name);
     }
   }
 

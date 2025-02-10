@@ -78,6 +78,7 @@ class MessageList extends HTMLElement {
             minute,
             phone: data.phone,
             message: data.message,
+            message_type: data.type,
           }),
         });
 
@@ -122,12 +123,6 @@ class MessageList extends HTMLElement {
       dataSource: this.messages,
       allowPaging: true,
       pageSettings: { pageSize: 10 },
-      editSettings: {
-        allowEditing: true,
-        allowAdding: true,
-        allowDeleting: true,
-        mode: "Dialog",
-      },
       filterSettings: { type: "Menu" },
       enableAdaptiveUI: false,
       allowResizing: true,
@@ -135,9 +130,9 @@ class MessageList extends HTMLElement {
       allowFiltering: true,
       allowDragging: false,
       queryCellInfo: renderCell,
-      toolbar: ["Add", "Edit", "Delete", "Update", "Cancel"],
+      toolbar: ["Add", "Delete", "Update", "Cancel"],
       editSettings: {
-        allowEditing: true,
+        allowEditing: false,
         allowAdding: true,
         allowDeleting: true,
         allowDragging: false,
@@ -329,8 +324,6 @@ class MessageList extends HTMLElement {
             if (!args.previousData?.id) {
               // This is a new record
               const result = await this.toggleMessage(data, true);
-
-              debugger;
 
               if (result.status === "success") {
                 args.data.enabled = true;

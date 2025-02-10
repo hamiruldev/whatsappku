@@ -1,6 +1,7 @@
 import requests
-from flask import current_app
+from flask import current_app, request
 import base64
+import os
 
 class WhatsAppAPI:
     """
@@ -11,6 +12,10 @@ class WhatsAppAPI:
     @staticmethod
     def _get_base_url():
         return current_app.config['WAHA_API_URL']
+    
+    @staticmethod
+    def _get_media_url():
+        return current_app.config['MEDIA_URL']
     
     @staticmethod
     def _get_session():
@@ -123,23 +128,60 @@ class WhatsAppAPI:
         return requests.post(url, json=payload)
 
     @classmethod
-    def send_status(cls, image_path=None, image_url=None, caption=None):
-        """Send a status/story"""
-        url = f"{cls._get_base_url()}/api/sendStatus"
-        payload = {
-            "session": cls._get_session(),
-            "caption": caption
-        }
-        
-        if image_path:
-            with open(image_path, 'rb') as image_file:
-                payload["file"] = {
-                    "data": base64.b64encode(image_file.read()).decode('utf-8')
-                }
-        elif image_url:
-            payload["file"] = {"url": image_url}
+    def send_status(cls, session, image_path, caption=None):
+        """Send an image as a status update"""
+        try:
+            url = f"{cls._get_base_url()}/api/{session}/status/image"
             
-        return requests.post(url, json=payload)
+            # Get the image mimetype
+            mime_type = "image/png" if image_path.endswith('.png') else "image/jpeg"
+            filename = os.path.basename(image_path)
+            
+            imgUrl = f"{cls._get_media_url()}/static/images/gold_prices/{filename}"
+            
+            
+            # Read the image file and convert to base64
+            with open(image_path, 'rb') as image_file:
+                image_data = base64.b64encode(image_file.read()).decode('utf-8')
+                data_url = f"data:{mime_type};base64,{image_data}"
+            
+            # Prepare the payload with base64 data
+            payload = {
+                "file": {
+                    "mimetype": mime_type,
+                    "filename": filename,
+                    "url": imgUrl  # Send base64 data URL instead of file URL
+                },
+                "contacts": None,
+                "caption": caption if caption else ""
+            }
+            
+            response = requests.post(
+                url, 
+                json=payload,
+                headers={'Content-Type': 'application/json'},
+                timeout=90
+            )
+            response.raise_for_status()
+            
+            # Delete the image file after successful upload
+            try:
+                # os.remove(image_path)
+                current_app.logger.info(f"Successfully deleted image: {image_path}")
+            except Exception as e:
+                current_app.logger.warning(f"Failed to delete image {image_path}: {str(e)}")
+            
+            return response.json()
+            
+        except Exception as e:
+            current_app.logger.error(f"Error sending status: {str(e)}")
+            # Try to clean up the image even if status sending fails
+            try:
+                # os.remove(image_path)
+                current_app.logger.info(f"Successfully deleted image: {image_path}")
+            except:
+                pass
+            raise e
 
     @classmethod
     def get_contacts(cls, contact_id=None):

@@ -6,6 +6,7 @@ from flask import current_app
 from datetime import datetime
 import uuid
 from pytz import timezone
+from app.services.image_generator import ImageGenerator
 
 # Create scheduler with proper timezone and settings
 scheduler = BackgroundScheduler(
@@ -21,32 +22,41 @@ scheduler = BackgroundScheduler(
 scheduler.start()
 
 def create_message_sender(app):
-    def send_message(phone, message, session_name=None):
+    def send_message(phone, message, session_name=None, message_type="chat"):
         from app.controllers.whatsapp import WhatsAppController
+        from app.services.image_generator import ImageGenerator
         
         with app.app_context():
             current_app.logger.info(f"Attempting to send scheduled message at {datetime.now()}")
             current_app.logger.info(f"Session: {session_name}")
-            current_app.logger.info(f"Target phone: {phone}")
-            current_app.logger.info(f"Message content: {message}")
+            current_app.logger.info(f"Type: {message_type}")
             
             try:
-                # Use session_name when sending message
-                result = WhatsAppController.send_message(phone, message, session_name)
-                current_app.logger.info(f"Message sent successfully to {phone}")
+                if message_type == "story":
+                    # Generate and post gold price status
+                    result = ImageGenerator.generate_and_post_status(session_name)
+                    if result is None:
+                        raise Exception("Failed to generate and post status")
+                else:
+                    # Send regular chat message
+                    result = WhatsAppController.send_message(phone, message, session_name)
+                
+                current_app.logger.info(f"Message sent successfully")
                 current_app.logger.info(f"API Response: {result}")
+                return result
+                
             except Exception as e:
                 current_app.logger.error(f"Error sending message: {str(e)}")
                 current_app.logger.exception("Full traceback:")
+                raise e
     return send_message
 
-def add_scheduled_message(session_name, hour, minute, phone, message):
+def add_scheduled_message(session_name, hour, minute, phone, message, message_type="chat"):
     app = current_app._get_current_object()
     message_sender = create_message_sender(app)
     
     job_id = str(uuid.uuid4())
     
-    # Add job with explicit timezone
     scheduler.add_job(
         message_sender,
         'cron',
@@ -54,13 +64,15 @@ def add_scheduled_message(session_name, hour, minute, phone, message):
         minute=int(minute),
         id=job_id,
         args=[phone, message],
+        kwargs={
+            'session_name': session_name,
+            'message_type': message_type
+        },
         replace_existing=True,
-        misfire_grace_time=None,
-        # Store session_name in job kwargs for filtering
-        kwargs={'session_name': session_name}
+        misfire_grace_time=None
     )
     
-    print(f"Added new scheduled message: ID={job_id}, Session={session_name}, Time={hour}:{minute}, Phone={phone}")
+    print(f"Added new scheduled message: ID={job_id}, Session={session_name}, Type={message_type}, Time={hour}:{minute}")
     return job_id
 
 def get_all_scheduled_messages(session_name=None):
@@ -136,3 +148,11 @@ def check_session_status():
     
     
     print("Scheduler initialized with health and session checks")
+
+# Add to your scheduler initialization
+scheduler.add_job(
+    ImageGenerator.cleanup_old_images,
+    'interval',
+    hours=24,
+    id='cleanup_gold_price_images'
+)

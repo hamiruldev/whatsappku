@@ -88,7 +88,8 @@ def register_routes(app):
                     hour=data.get('hour'),
                     minute=data.get('minute'),
                     phone=data.get('phone'),
-                    message=data.get('message')
+                    message=data.get('message'),
+                    message_type=data.get('message_type')
                 )
                 
                 return jsonify({

@@ -17,3 +17,6 @@ venv/
 
 # System
 .DS_Store 
+
+app/static/images/gold_prices/*
+!app/static/images/gold_prices/.gitkeep 
