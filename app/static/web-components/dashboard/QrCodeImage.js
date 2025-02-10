@@ -67,6 +67,7 @@ class QrCodeImage extends HTMLElement {
           display: none;
           width: 100%;
           height: auto;
+          object-fit: fill;
         }
       </style>
       <div class="container">

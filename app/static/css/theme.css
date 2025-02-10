@@ -33,3 +33,7 @@
   --glass: var(--glass-dark);
   --border: var(--border-dark);
 }
+
+.zindexToast {
+  z-index: 10000 !important;
+}

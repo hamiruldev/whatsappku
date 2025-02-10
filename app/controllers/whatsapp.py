@@ -16,24 +16,18 @@ class WhatsAppController:
             return {"error": str(e)}
 
     @staticmethod
-    def send_message(chat_id, message, reply_to=None):
-        """
-        Business logic for sending a message to a specific chat.
-        """
+    def send_message(phone, message, session_name=None):
+        """Send a message to a specific phone number"""
         try:
-            # Format chat_id if needed
-            formatted_chat_id = f"{chat_id}@c.us" if "@c.us" not in chat_id else chat_id
-            
             response = WhatsAppAPI.send_text(
-                chat_id=formatted_chat_id,
-                text=message,
-                reply_to=reply_to
+                session=session_name,
+                chat_id=phone,
+                text=message
             )
-            response.raise_for_status()
             return response.json()
         except Exception as e:
-            current_app.logger.error(f"Error sending message: {e}")
-            return {"error": str(e)}
+            current_app.logger.error(f"Error sending message: {str(e)}")
+            raise e
     
     @staticmethod
     def get_contacts(contact_id=None):

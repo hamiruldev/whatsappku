@@ -2,6 +2,20 @@ class MessageList extends HTMLElement {
   constructor() {
     super();
     this.messages = [];
+    this.sessionName = this.getAttribute("sessionName");
+  }
+
+  static get observedAttributes() {
+    return ["sessionName"];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === "sessionName" && oldValue !== newValue) {
+      this.sessionName = newValue;
+      if (this.isConnected) {
+        this.loadMessages();
+      }
+    }
   }
 
   async connectedCallback() {
@@ -12,12 +26,34 @@ class MessageList extends HTMLElement {
 
   async loadMessages() {
     try {
-      const response = await fetch("/api/scheduled-messages");
+      let url = "/api/scheduled-messages";
 
+      // If sessionName is provided, use the session-specific endpoint
+      if (this.sessionName) {
+        url = `/api/scheduled-messages/session/${this.sessionName}`;
+      }
+
+      const response = await fetch(url);
       const data = await response.json();
-      const updatedData = updateTimeToDate(data);
 
+      // Handle both response formats
+      let messages;
+      if (this.sessionName) {
+        // Session-specific endpoint returns { status, data }
+        messages = data.status === "success" ? data.data : [];
+      } else {
+        // General endpoint returns array directly
+        messages = data;
+      }
+
+      const updatedData = updateTimeToDate(messages);
       this.messages = updatedData;
+
+      // If grid exists, update its data source
+      if (this.grid) {
+        this.grid.dataSource = this.messages;
+        this.grid.refresh();
+      }
     } catch (error) {
       console.error("Error loading messages:", error);
       this.messages = [];
@@ -27,20 +63,17 @@ class MessageList extends HTMLElement {
   async toggleMessage(data, enabled) {
     try {
       if (enabled) {
-        console.log(data);
-        // Create new scheduled message
-        // Extract hour and minute from the ISO date string
         const date = new Date(data.time);
         const hour = date.getHours();
         const minute = date.getMinutes();
 
-        // Create new scheduled message
         const response = await fetch("/api/scheduled-messages", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            session: this.sessionName, // Include session name if available
             hour,
             minute,
             phone: data.phone,
@@ -49,18 +82,19 @@ class MessageList extends HTMLElement {
         });
 
         const result = await response.json();
-        data.id = result.id;
+        return result;
       } else {
-        // Delete scheduled message
-        await fetch(`/api/scheduled-messages/${data.id}`, {
+        const response = await fetch(`/api/scheduled-messages`, {
           method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id: data.id }),
         });
-      }
 
-      showNotification(
-        `Message ${enabled ? "scheduled" : "unscheduled"} successfully`,
-        "success"
-      );
+        const result = await response.json();
+        return result;
+      }
     } catch (error) {
       console.error("Error toggling message:", error);
       showNotification("Error updating message schedule", "error");
@@ -73,6 +107,7 @@ class MessageList extends HTMLElement {
 
       var switchObj = new ej.buttons.Switch({
         cssClass: "e-togglebutton",
+        defaultValue: true,
         change: (args) => {
           console.log(args);
         },
@@ -82,7 +117,7 @@ class MessageList extends HTMLElement {
     }
 
     var phoneElem, phoneObj;
-
+    var typeElem, typeObj;
     var grid = new ej.grids.Grid({
       dataSource: this.messages,
       allowPaging: true,
@@ -93,8 +128,11 @@ class MessageList extends HTMLElement {
         allowDeleting: true,
         mode: "Dialog",
       },
+      filterSettings: { type: "Menu" },
       enableAdaptiveUI: false,
       allowResizing: true,
+      allowSorting: true,
+      allowFiltering: true,
       allowDragging: false,
       queryCellInfo: renderCell,
       toolbar: ["Add", "Edit", "Delete", "Update", "Cancel"],
@@ -114,6 +152,8 @@ class MessageList extends HTMLElement {
           textAlign: "Left",
           width: 100,
           visible: true, // Hide ID in edit/create modes
+          allowFiltering: false,
+          allowSorting: false,
         },
         {
           field: "enabled",
@@ -122,6 +162,8 @@ class MessageList extends HTMLElement {
           width: 150,
           template: "#enabledTemplate",
           visible: true,
+          allowFiltering: false,
+          allowSorting: false,
         },
         {
           field: "time",
@@ -134,10 +176,79 @@ class MessageList extends HTMLElement {
           visible: true,
           defaultValue: getFormattedNow(),
         },
+
+        {
+          field: "type",
+          headerText: "Type",
+          textAlign: "Left",
+          width: 150,
+          allowFiltering: false,
+          allowSorting: true,
+          edit: {
+            create: function () {
+              typeElem = document.createElement("input");
+              typeElem.type = "text";
+              typeElem.tabIndex = "1";
+              return typeElem;
+            },
+            read: function () {
+              return typeObj.value;
+            },
+            destroy: function () {
+              typeObj.destroy();
+            },
+            write: function (args) {
+              function togglePhoneRow(condition) {
+                // Find the input element
+                const phoneInput = document.querySelector("input#gridphone");
+
+                if (phoneInput) {
+                  // Find the closest <tr> element containing the input
+                  const rowElement = phoneInput.closest("tr");
+
+                  if (rowElement) {
+                    // Hide or show the row based on the condition
+                    if (condition) {
+                      rowElement.style.display = "none"; // Hide the row
+                    } else {
+                      rowElement.style.display = ""; // Show the row
+                    }
+                  }
+                }
+              }
+
+              typeObj = new ej.dropdowns.DropDownList({
+                dataSource: ["story", "chat"], // Use window.allContacts as the data source
+                placeholder: "Select a type",
+                floatLabelType: "Always",
+                value: args.rowData.type ?? "chat",
+                created: function () {
+                  if (args.rowData.type === "story") {
+                    togglePhoneRow(true);
+                  } else {
+                    togglePhoneRow(false);
+                  }
+                },
+                change: (args) => {
+                  if (args.value === "story") {
+                    togglePhoneRow(true);
+                  } else {
+                    togglePhoneRow(false);
+                  }
+                },
+              });
+              typeObj.appendTo(typeElem);
+            },
+          },
+          visible: true,
+        },
+
         {
           field: "phone",
           headerText: "Phone Number",
           textAlign: "Left",
+          allowFiltering: true,
+          allowSorting: true,
           width: 150,
           edit: {
             create: function () {
@@ -173,38 +284,70 @@ class MessageList extends HTMLElement {
           editType: "textarea",
           visible: true,
           rows: 3,
+          allowFiltering: false,
+          allowSorting: false,
         },
       ],
 
       toolbar: ["Add", "Edit", "Delete"],
 
-      actionBegin(args) {
-        if (args.requestType === "beginEdit" || args.requestType === "add") {
-          for (var i = 0; i < grid.columns.length; i++) {
-            if (
-              grid.columns[i].field == "enabled" ||
-              grid.columns[i].field == "id"
-            ) {
-              grid.columns[i].visible = false;
+      actionBegin: async (args) => {
+        if (args.requestType === "add" || args.requestType === "beginEdit") {
+          // Hide enabled and id columns in edit mode
+          for (let column of grid.columns) {
+            if (column.field === "enabled" || column.field === "id") {
+              column.visible = false;
             }
+          }
+        }
+
+        if (args.requestType === "delete") {
+          const result = await this.toggleMessage(args.data[0], false);
+          if (result.status === "success") {
+            showNotification(`Message unscheduled successfully`, "success");
+          } else {
+            showNotification(`Message unscheduling failed`, "error");
           }
         }
       },
 
-      actionComplete(args) {
-        if (args.requestType === "beginEdit" || args.requestType === "add") {
-          var dialog = args.dialog;
-          dialog.allowDragging = false;
-          dialog.header =
-            args.requestType === "beginEdit"
-              ? "Edit Message of " + args.rowData["id"]
-              : "New Message";
+      actionComplete: async (args) => {
+        if (args.requestType === "add") {
+          // args.dialog.header = "Add Session";
+          args.dialog.allowDragging = false;
         }
+
+        if (args.requestType === "beginEdit") {
+          // args.dialog.header = "Edit Session";
+          args.dialog.allowDragging = false;
+        }
+
         if (args.requestType === "save" || args.requestType === "cancel") {
-          for (var i = 0; i < grid.columns.length; i++) {
-            grid.columns[i].visible = true;
+          // Handle save action
+          if (args.action === "add") {
+            const data = args.data;
+            if (!args.previousData?.id) {
+              // This is a new record
+              const result = await this.toggleMessage(data, true);
+
+              debugger;
+
+              if (result.status === "success") {
+                args.data.enabled = true;
+                args.data.id = result.id;
+                args.rowData = data;
+
+                showNotification(`Message scheduled successfully`, "success");
+              } else {
+                showNotification(`Message scheduling failed`, "error");
+              }
+            }
           }
 
+          // Show all columns after save/cancel
+          for (let column of grid.columns) {
+            column.visible = true;
+          }
           grid.refresh();
         }
       },
@@ -234,6 +377,7 @@ class MessageList extends HTMLElement {
     });
 
     grid.appendTo(this.querySelector("#grid"));
+    this.grid = grid; // Store grid reference
 
     // Add event listeners for toggle buttons
     this.querySelector("#grid").addEventListener("click", async (e) => {
@@ -253,14 +397,17 @@ class MessageList extends HTMLElement {
   }
 
   render() {
+    const title = this.sessionName
+      ? `Scheduled Messages for ${this.sessionName}`
+      : "All Scheduled Messages";
+
     this.innerHTML = `
-      <div class="glass rounded-2xl  text-white  p-6 shadow-lg">
-        <h2 class="text-2xl font-bold text-white mb-4">Scheduled Messages</h2>
+      <div class="glass rounded-2xl text-white p-6 shadow-lg">
+        <h2 class="text-2xl font-bold mb-4">${title}</h2>
         
-         <script type="text/x-template" id="enabledTemplate" >
-           <input id="enable-button" type="checkbox" />
+        <script type="text/x-template" id="enabledTemplate">
+          <input id="enable-button" type="checkbox" />
         </script>
-     
         
         <div id="grid"></div>
       </div>

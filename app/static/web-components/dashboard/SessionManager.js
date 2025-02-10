@@ -230,6 +230,11 @@ class SessionManager extends HTMLElement {
                 display: flex;
                 flex-direction: column;
             }
+
+            .schedules-container .glass{
+              box-shadow: none;
+            }
+
             .qr-container, .screenshot-container, .test-message-container, .schedules-container {
                 padding: 20px 0px;
                 height: 100%;
@@ -373,7 +378,7 @@ class SessionManager extends HTMLElement {
   }
 
   toggleGridColumnVisibility(visible) {
-    const columns = ["name", "status", "server", "actions"];
+    const columns = ["name", "status", "actions"];
     columns.forEach((column) => {
       this.grid.getColumnByField(column).visible = visible;
     });
@@ -386,6 +391,7 @@ class SessionManager extends HTMLElement {
     }
 
     if (args.requestType === "add") {
+      debugger;
       // args.dialog.header = "Add Session";
       args.dialog.allowDragging = false;
     }
@@ -514,7 +520,9 @@ class SessionManager extends HTMLElement {
       }
       if (
         this.newSessionRegister == sessionName &&
-        newStatus == "SCAN_QR_CODE"
+        newStatus == "SCAN_QR_CODE" &&
+        !document.querySelector("#sessionsGrid_dialogEdit_wrapper") &&
+        !document.querySelector("#managementDialog")
       ) {
         this.openDialogToShowQrCode();
       }
@@ -543,12 +551,10 @@ class SessionManager extends HTMLElement {
               <qr-code-image sessionName="${sessionName}"></qr-code-image>
             </div>
           </div>
-      
-    
 
           <div class="e-item">
             <div class="schedules-container">
-              <message-list></message-list>
+              <message-list sessionName="${sessionName}"></message-list>
             </div>
           </div>
 
@@ -572,8 +578,8 @@ class SessionManager extends HTMLElement {
       content: dialogHtml,
       showCloseIcon: true,
       isModal: true,
-      width: "90%",
-      height: "90%",
+      width: isMobile() ? "100%" : "90%",
+      height: isMobile() ? "100%" : "90%",
       visible: false,
       close: () => {
         dialog.destroy();
@@ -593,33 +599,38 @@ class SessionManager extends HTMLElement {
       selected: (args) => this.handleTabChange(args, sessionName),
     });
 
-    // Append dialog to body and show it
     dialog.appendTo("#managementDialog");
-    dialog.show(1);
+
+    if (isMobile()) {
+      dialog.show();
+    } else {
+      dialog.show(1);
+    }
 
     // Initialize tab after dialog is shown
     tab.appendTo(".session-manage-dialog");
 
     // Add event listeners
-    this.setupManageDialogEvents(dialog, sessionName);
+    dialog && this.setupManageDialogEvents(dialog, sessionName);
   }
 
   handleTabChange(args, sessionName) {
     const selectedTab = args.selectedIndex;
     switch (selectedTab) {
       case 0:
-        this.loadQRCode(sessionName);
+        // this.loadScreenshot(sessionName);
         break;
       case 1:
-        this.loadScreenshot(sessionName);
+        this.handleGrid(sessionName);
         break;
       // case 2:
-      //   this.initializeSchedulesGrid(sessionName);
+      //   this.handleGrid(sessionName);
       //   break;
     }
   }
 
   async loadQRCode(sessionName) {
+    debugger;
     try {
       const response = await fetch(`/api/session/auth/qr`, {
         method: "POST",
@@ -653,27 +664,23 @@ class SessionManager extends HTMLElement {
 
   setupManageDialogEvents(dialog, sessionName) {
     // QR Code refresh
-    dialog.element
-      .querySelector(".refresh-qr")
-      .addEventListener("click", () => {
-        this.loadQRCode(sessionName);
-      });
+    // document.querySelector(".refresh-qr").addEventListener("click", () => {
+    //   this.loadQRCode(sessionName);
+    // });
 
     // Screenshot refresh
-    dialog.element
-      .querySelector(".refresh-screenshot")
-      .addEventListener("click", () => {
-        this.loadScreenshot(sessionName);
-      });
+    // document
+    //   .querySelector(".refresh-screenshot")
+    //   .addEventListener("click", () => {
+    //     this.loadScreenshot(sessionName);
+    //   });
 
     // Send test message
-    dialog.element
-      .querySelector(".send-test")
-      .addEventListener("click", async () => {
-        const phone = dialog.element.querySelector("#testPhone").value;
-        const message = dialog.element.querySelector("#testMessage").value;
-        await this.sendTestMessage(sessionName, phone, message);
-      });
+    document.querySelector(".send-test").addEventListener("click", async () => {
+      const phone = dialog.element.querySelector("#testPhone").value;
+      const message = dialog.element.querySelector("#testMessage").value;
+      await this.sendTestMessage(sessionName, phone, message);
+    });
   }
 
   async sendTestMessage(sessionName, phone, message) {
@@ -688,7 +695,11 @@ class SessionManager extends HTMLElement {
         }),
       });
       const result = await response.json();
-      if (response.ok) {
+      console.log("result", result);
+      debugger;
+
+      if (result.success) {
+        debugger;
         showNotification("Test message sent successfully", "success");
       } else {
         showNotification("Failed to send test message", "error");
@@ -698,28 +709,30 @@ class SessionManager extends HTMLElement {
     }
   }
 
-  initializeSchedulesGrid(sessionName) {
-    if (document.querySelector("#schedulesGrid").ej2_instances?.[0]) {
-      document.querySelector("#schedulesGrid").ej2_instances[0].destroy();
-    }
+  handleGrid(sessionName) {
+    const sessionDetails = this.sessions.find((s) => s.name === sessionName);
 
-    const grid = new ej.grids.Grid({
-      dataSource: [],
-      columns: [
-        { field: "time", headerText: "Time", width: 120 },
-        { field: "phone", headerText: "Phone", width: 150 },
-        { field: "message", headerText: "Message", width: 200 },
-      ],
-    });
-    grid.appendTo("#schedulesGrid");
-    this.loadSchedules(sessionName, grid);
+    if (sessionDetails.status != "WORKING") {
+      document.querySelector(
+        "#grid"
+      ).ej2_instances[0].editSettings.allowEditing = false;
+
+      document.querySelector(
+        "#grid"
+      ).ej2_instances[0].editSettings.allowAdding = false;
+    }
   }
 
   async loadSchedules(sessionName, grid) {
     try {
-      const response = await fetch("/api/scheduled-messages");
-      const data = await response.json();
-      grid.dataSource = data;
+      const response = await fetch(
+        `/api/scheduled-messages/session/${sessionName}`
+      );
+      const result = await response.json();
+      if (result.status === "success") {
+        grid.dataSource = result.data;
+        grid.refresh();
+      }
     } catch (error) {
       console.error("Error loading schedules:", error);
     }

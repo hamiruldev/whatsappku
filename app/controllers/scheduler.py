@@ -21,16 +21,18 @@ scheduler = BackgroundScheduler(
 scheduler.start()
 
 def create_message_sender(app):
-    def send_message(phone, message):
+    def send_message(phone, message, session_name=None):
         from app.controllers.whatsapp import WhatsAppController
         
         with app.app_context():
             current_app.logger.info(f"Attempting to send scheduled message at {datetime.now()}")
+            current_app.logger.info(f"Session: {session_name}")
             current_app.logger.info(f"Target phone: {phone}")
             current_app.logger.info(f"Message content: {message}")
             
             try:
-                result = WhatsAppController.send_message(phone, message)
+                # Use session_name when sending message
+                result = WhatsAppController.send_message(phone, message, session_name)
                 current_app.logger.info(f"Message sent successfully to {phone}")
                 current_app.logger.info(f"API Response: {result}")
             except Exception as e:
@@ -38,7 +40,7 @@ def create_message_sender(app):
                 current_app.logger.exception("Full traceback:")
     return send_message
 
-def add_scheduled_message(hour, minute, phone, message):
+def add_scheduled_message(session_name, hour, minute, phone, message):
     app = current_app._get_current_object()
     message_sender = create_message_sender(app)
     
@@ -53,17 +55,24 @@ def add_scheduled_message(hour, minute, phone, message):
         id=job_id,
         args=[phone, message],
         replace_existing=True,
-        misfire_grace_time=None
+        misfire_grace_time=None,
+        # Store session_name in job kwargs for filtering
+        kwargs={'session_name': session_name}
     )
     
-    print(f"Added new scheduled message: ID={job_id}, Time={hour}:{minute}, Phone={phone}")
+    print(f"Added new scheduled message: ID={job_id}, Session={session_name}, Time={hour}:{minute}, Phone={phone}")
     return job_id
 
-def get_all_scheduled_messages():
+def get_all_scheduled_messages(session_name=None):
     jobs = scheduler.get_jobs()
     scheduled_messages = []
     
     for job in jobs:
+        # Skip jobs that don't match the session_name if specified
+        job_session = job.kwargs.get('session_name')
+        if session_name and job_session != session_name:
+            continue
+            
         trigger = job.trigger
         
         # Get the hour and minute from the trigger
@@ -79,6 +88,7 @@ def get_all_scheduled_messages():
         
         scheduled_messages.append({
             'id': job.id,
+            'session_name': job_session,
             'enabled': True,
             'hour': hour,
             'minute': minute,

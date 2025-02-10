@@ -17,12 +17,12 @@ class WhatsAppAPI:
         return current_app.config['WAHA_SESSION']
     
     @classmethod
-    def send_text(cls, chat_id, text, reply_to=None, link_preview=True):
+    def send_text(cls, session, chat_id, text, reply_to=None, link_preview=True):
         """Send a text message to a specific chat"""
         url = f"{cls._get_base_url()}/api/sendText"
         payload = {
-            "session": cls._get_session(),
-            "chatId": chat_id,
+            "session": session,
+            "chatId": f"{chat_id}@c.us",
             "text": text,
             "reply_to": reply_to,
             "linkPreview": link_preview

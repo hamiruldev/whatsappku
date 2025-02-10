@@ -71,38 +71,135 @@ def register_routes(app):
             "message": message
         })
 
-    @app.route('/api/scheduled-messages', methods=['GET'])
-    def get_scheduled_messages():
-        from app.controllers.scheduler import get_all_scheduled_messages
-        messages = get_all_scheduled_messages()
-        return jsonify(messages)
-
-    @app.route('/api/scheduled-messages', methods=['POST'])
-    def create_scheduled_message():
-        from app.controllers.scheduler import add_scheduled_message
-        data = request.json
+    @app.route('/api/scheduled-messages', methods=['GET', 'POST', 'DELETE'])
+    def manage_scheduled_messages():
+        from app.controllers.scheduler import add_scheduled_message, get_all_scheduled_messages, remove_scheduled_message
         
-        job_id = add_scheduled_message(
-            hour=data.get('hour'),
-            minute=data.get('minute'),
-            phone=data.get('phone'),
-            message=data.get('message')
-        )
+        if request.method == 'GET':
+            session_name = request.args.get('session')
+            messages = get_all_scheduled_messages(session_name)
+            return jsonify(messages)
+        
+        elif request.method == 'POST':
+            data = request.json
+            try:
+                job_id = add_scheduled_message(
+                    session_name=data.get('session'),
+                    hour=data.get('hour'),
+                    minute=data.get('minute'),
+                    phone=data.get('phone'),
+                    message=data.get('message')
+                )
+                
+                return jsonify({
+                    'id': job_id,
+                    'status': 'success',
+                    'message': 'Scheduled message created'
+                })
+            except Exception as e:
+                return jsonify({
+                    'status': 'error',
+                    'message': str(e)
+                }), 400
+            
+        elif request.method == 'DELETE':
+            job_id = request.json.get('id')
+            if not job_id:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Job ID is required'
+                }), 400
+            
+            success = remove_scheduled_message(job_id)
+            if success:
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Scheduled message removed'
+                })
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to remove scheduled message'
+            }), 400
+
+    @app.route('/api/scheduled-messages/session/<session_name>', methods=['GET'])
+    def get_session_messages(session_name):
+        """Get all scheduled messages for a specific session"""
+        from app.controllers.scheduler import get_all_scheduled_messages
+        
+        try:
+            messages = get_all_scheduled_messages(session_name)
+            return jsonify({
+                'status': 'success',
+                'data': messages
+            })
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 400
+
+    @app.route('/api/scheduled-messages/bulk', methods=['POST'])
+    def bulk_schedule_messages():
+        """Create multiple scheduled messages at once"""
+        from app.controllers.scheduler import add_scheduled_message
+        
+        data = request.json
+        session_name = data.get('session')
+        messages = data.get('messages', [])
+        
+        results = []
+        for msg in messages:
+            try:
+                job_id = add_scheduled_message(
+                    session_name=session_name,
+                    hour=msg.get('hour'),
+                    minute=msg.get('minute'),
+                    phone=msg.get('phone'),
+                    message=msg.get('message')
+                )
+                results.append({
+                    'status': 'success',
+                    'id': job_id,
+                    'message': msg
+                })
+            except Exception as e:
+                results.append({
+                    'status': 'error',
+                    'message': str(e),
+                    'data': msg
+                })
         
         return jsonify({
-            'id': job_id,
             'status': 'success',
-            'message': 'Scheduled message created'
+            'results': results
         })
 
-    @app.route('/api/scheduled-messages/<job_id>', methods=['DELETE'])
-    def delete_scheduled_message(job_id):
-        from app.controllers.scheduler import remove_scheduled_message
-        success = remove_scheduled_message(job_id)
+    @app.route('/api/scheduled-messages/session/<session_name>/clear', methods=['POST'])
+    def clear_session_messages(session_name):
+        """Remove all scheduled messages for a specific session"""
+        from app.controllers.scheduler import get_all_scheduled_messages, remove_scheduled_message
         
-        if success:
-            return jsonify({'status': 'success', 'message': 'Scheduled message removed'})
-        return jsonify({'status': 'error', 'message': 'Failed to remove scheduled message'}), 400
+        try:
+            messages = get_all_scheduled_messages(session_name)
+            removed = 0
+            failed = 0
+            
+            for msg in messages:
+                if remove_scheduled_message(msg['id']):
+                    removed += 1
+                else:
+                    failed += 1
+            
+            return jsonify({
+                'status': 'success',
+                'removed': removed,
+                'failed': failed
+            })
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 400
 
     @app.route('/api/health', methods=['GET'])
     def check_waha_health():
@@ -277,14 +374,15 @@ def register_routes(app):
         return jsonify(jobs)
 
     @app.route('/api/message/send', methods=['POST'])
-    def send_test_message():
+    def send_message():
         from app.services.whatsapp_api import WhatsAppAPI
         data = request.json
         
         try:
             response = WhatsAppAPI.send_text(
                 chat_id=data['phone'],
-                text=data['message']
+                text=data['message'],
+                session=data['session']
             )
             return jsonify({'success': True, 'message': 'Message sent successfully'}), 200
         except Exception as e:

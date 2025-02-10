@@ -1,7 +1,7 @@
 function showNotification(message, type) {
   // Create notification element
   const notification = document.createElement("div");
-  notification.className = `notification p-4 rounded-lg text-white ${
+  notification.className = `notification zindexToast p-4 rounded-lg text-white ${
     type === "success" ? "bg-green-500" : "bg-red-500"
   }`;
   notification.textContent = message;
