@@ -78,7 +78,8 @@ class MessageList extends HTMLElement {
             minute,
             phone: data.phone,
             message: data.message,
-            message_type: data.type
+            type: data.type,
+            target: data.target
           })
         });
 

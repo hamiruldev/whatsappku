@@ -22,17 +22,18 @@ scheduler = BackgroundScheduler(
 scheduler.start()
 
 def create_message_sender(app):
-    def send_message(phone, message, session_name=None, message_type="chat"):
+    def send_message(phone, message, session_name=None, type="text", target="chat"):
         from app.controllers.whatsapp import WhatsAppController
         from app.services.image_generator import ImageGenerator
         
         with app.app_context():
             current_app.logger.info(f"Attempting to send scheduled message at {datetime.now()}")
             current_app.logger.info(f"Session: {session_name}")
-            current_app.logger.info(f"Type: {message_type}")
+            current_app.logger.info(f"Type: {type}")
+            current_app.logger.info(f"Target: {target}")
             
             try:
-                if message_type == "story":
+                if type == "story":
                     # Generate and post gold price status
                     result = ImageGenerator.generate_and_post_status(session_name)
                     if result is None:
@@ -51,7 +52,7 @@ def create_message_sender(app):
                 raise e
     return send_message
 
-def add_scheduled_message(session_name, hour, minute, phone, message, message_type="chat"):
+def add_scheduled_message(session_name, hour, minute, phone, message, type="text", target="chat"):
     app = current_app._get_current_object()
     message_sender = create_message_sender(app)
     
@@ -66,13 +67,14 @@ def add_scheduled_message(session_name, hour, minute, phone, message, message_ty
         args=[phone, message],
         kwargs={
             'session_name': session_name,
-            'message_type': message_type
+            'type': type,
+            'target': target
         },
         replace_existing=True,
         misfire_grace_time=None
     )
     
-    print(f"Added new scheduled message: ID={job_id}, Session={session_name}, Type={message_type}, Time={hour}:{minute}")
+    print(f"Added new scheduled message: ID={job_id}, Session={session_name}, Type={type}, Time={hour}:{minute}")
     return job_id
 
 def get_all_scheduled_messages(session_name=None):

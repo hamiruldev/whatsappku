@@ -545,6 +545,7 @@ class SessionManager extends HTMLElement {
       <div class="session-manage-dialog">
         <div class="e-tab-header">
           <div class="e-tab-text">Screenshot</div>
+          <div class="e-tab-text">Calendar</div>
           <div class="e-tab-text">Schedules</div>
           <div class="e-tab-text">Test Message</div>
         </div>
@@ -552,6 +553,12 @@ class SessionManager extends HTMLElement {
           <div class="e-item">
             <div class="qr-container">
               <qr-code-image sessionName="${sessionName}"></qr-code-image>
+            </div>
+          </div>
+
+          <div class="e-item">
+            <div class="calendar-container">
+              <schedule-manager sessionName="${sessionName}"></schedule-manager>
             </div>
           </div>
 
@@ -593,6 +600,7 @@ class SessionManager extends HTMLElement {
     const tab = new ej.navigations.Tab({
       items: [
         { header: { text: "Screenshot" }, content: ".qr-container" },
+        { header: { text: "Calendar" }, content: ".calendar-container" },
         { header: { text: "Schedules" }, content: ".schedules-container" },
         {
           header: { text: "Test Message" },
@@ -624,6 +632,9 @@ class SessionManager extends HTMLElement {
         // this.loadScreenshot(sessionName);
         break;
       case 1:
+        document.querySelector("#schedule").ej2_instances[0].refresh();
+        break;
+      case 2:
         this.handleGrid(sessionName);
         break;
       // case 2:
