@@ -33,6 +33,10 @@ class SessionManager extends HTMLElement {
   }
 
   calculateNextSessionNumber() {
+    if (this.sessions.length == 0) {
+      return 0;
+    }
+
     const sessionNumbers = this.sessions.map((session) => {
       const match = session.name.match(/session_(\d+)/);
       return match ? parseInt(match[1], 10) : 0;
@@ -49,7 +53,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch("/api/session/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName }),
+        body: JSON.stringify({ name: sessionName })
       });
 
       const result = await response.json();
@@ -73,7 +77,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch("/api/session/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName, start: true }),
+        body: JSON.stringify({ name: sessionName, start: true })
       });
 
       const result = await response.json();
@@ -94,7 +98,7 @@ class SessionManager extends HTMLElement {
       // checksessionexist first
       return await this.checkSession(sessionName).then(async (res) => {
         const response = await fetch(`/api/session/screenshot/${sessionName}`, {
-          method: "GET",
+          method: "GET"
         });
 
         const result = await response.json();
@@ -157,7 +161,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch("/api/session/restart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: session.name }),
+        body: JSON.stringify({ name: session.name })
       });
 
       const result = await response.json();
@@ -201,7 +205,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName }),
+        body: JSON.stringify({ name: sessionName })
       });
 
       const message = response.ok
@@ -209,7 +213,7 @@ class SessionManager extends HTMLElement {
         : `Failed to ${action} session ${sessionName}`;
 
       showNotification(message, response.ok ? "success" : "error");
-        await this.refreshSessions();
+      await this.refreshSessions();
     } catch (error) {
       showNotification(
         `Error ${action}ing session ${sessionName}: ${error.message}`,
@@ -295,12 +299,12 @@ class SessionManager extends HTMLElement {
         allowAdding: true,
         allowEditing: false,
         allowDeleting: true,
-        mode: "Dialog",
+        mode: "Dialog"
       },
       width: "100%",
       columns: this.getGridColumns(),
       actionBegin: this.handleActionBegin.bind(this),
-      actionComplete: this.handleActionComplete.bind(this),
+      actionComplete: this.handleActionComplete.bind(this)
     });
 
     grid.appendTo(this.querySelector("#sessionsGrid"));
@@ -319,57 +323,57 @@ class SessionManager extends HTMLElement {
 
   getGridColumns() {
     return [
-        {
-          field: "name",
-          headerText: "Name",
-          width: 120,
-          textAlign: "Left",
-          allowEditing: false,
-        allowSorting: true,
-        },
-        {
-          field: "me.id",
-          headerText: "Phone (ex: 60184644305)",
+      {
+        field: "name",
+        headerText: "Name",
+        width: 120,
+        textAlign: "Left",
+        allowEditing: false,
+        allowSorting: true
+      },
+      {
+        field: "me.id",
+        headerText: "Phone (ex: 60184644305)",
         width: 170,
-          allowEditing: true,
-        allowSorting: true,
-        },
-        {
-          field: "status",
-          headerText: "Status",
+        allowEditing: true,
+        allowSorting: true
+      },
+      {
+        field: "status",
+        headerText: "Status",
         width: 150,
-          allowEditing: false,
+        allowEditing: false,
         visible: true,
         allowSorting: true,
-        allowFiltering: true,
-        },
-        {
-          field: "server",
-          headerText: "Server",
-          width: 120,
-          allowEditing: false,
-        visible: false,
-        },
-        {
-          field: "actions",
-          headerText: "Actions",
+        allowFiltering: true
+      },
+      {
+        field: "server",
+        headerText: "Server",
+        width: 120,
+        allowEditing: false,
+        visible: false
+      },
+      {
+        field: "actions",
+        headerText: "Actions",
         width: 120,
         template:
-          "<dialog-button session-name='${name}' session-status='${status}'></dialog-button>",
-      },
+          "<dialog-button session-name='${name}' session-status='${status}'></dialog-button>"
+      }
     ];
   }
 
   async handleActionBegin(args) {
-        if (args.requestType === "add" || args.requestType === "beginEdit") {
+    if (args.requestType === "add" || args.requestType === "beginEdit") {
       this.toggleGridColumnVisibility(false);
-        }
+    }
 
-        if (args.requestType === "delete") {
+    if (args.requestType === "delete") {
       await this.deleteSession(args.data[0].name);
-        }
+    }
 
-        if (args.requestType === "save" && args.action === "add") {
+    if (args.requestType === "save" && args.action === "add") {
       await this.createSession().then((res) => {
         this.newPhoneRegister = args.data.me.id;
         this.newSessionRegister = res.name;
@@ -390,14 +394,14 @@ class SessionManager extends HTMLElement {
       this.grid.refresh();
     }
 
-        if (args.requestType === "add") {
+    if (args.requestType === "add") {
       // args.dialog.header = "Add Session";
-          args.dialog.allowDragging = false;
-        }
+      args.dialog.allowDragging = false;
+    }
 
-        if (args.requestType === "beginEdit") {
+    if (args.requestType === "beginEdit") {
       // args.dialog.header = "Edit Session";
-          args.dialog.allowDragging = false;
+      args.dialog.allowDragging = false;
     }
   }
 
@@ -409,20 +413,20 @@ class SessionManager extends HTMLElement {
     }
 
     const button = event.target.closest("button");
-      if (!button) return;
+    if (!button) return;
 
-      const row = this.grid.getRowObjectFromUID(
+    const row = this.grid.getRowObjectFromUID(
       button.closest("tr")?.getAttribute("data-uid")
-      )?.data;
+    )?.data;
 
-      if (!row) return;
+    if (!row) return;
 
     if (button.classList.contains("start-btn")) {
-        await this.startSession(row.name);
-      } else if (button.classList.contains("restart-btn")) {
+      await this.startSession(row.name);
+    } else if (button.classList.contains("restart-btn")) {
       await this.restartSession(row);
-      } else if (button.classList.contains("stop-btn")) {
-        await this.stopSession(row.name);
+    } else if (button.classList.contains("stop-btn")) {
+      await this.stopSession(row.name);
     }
   }
 
@@ -582,7 +586,7 @@ class SessionManager extends HTMLElement {
       visible: false,
       close: () => {
         dialog.destroy();
-      },
+      }
     });
 
     // Create tab
@@ -592,10 +596,10 @@ class SessionManager extends HTMLElement {
         { header: { text: "Schedules" }, content: ".schedules-container" },
         {
           header: { text: "Test Message" },
-          content: ".test-message-container",
-        },
+          content: ".test-message-container"
+        }
       ],
-      selected: (args) => this.handleTabChange(args, sessionName),
+      selected: (args) => this.handleTabChange(args, sessionName)
     });
 
     dialog.appendTo("#managementDialog");
@@ -634,7 +638,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch(`/api/session/auth/qr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName }),
+        body: JSON.stringify({ name: sessionName })
       });
       const data = await response.json();
       if (data.qrCode) {
@@ -690,8 +694,8 @@ class SessionManager extends HTMLElement {
         body: JSON.stringify({
           session: sessionName,
           phone,
-          message,
-        }),
+          message
+        })
       });
       const result = await response.json();
       console.log("result", result);
@@ -769,7 +773,7 @@ class DialogButton extends HTMLElement {
       this.dispatchEvent(
         new CustomEvent("dialog-click", {
           bubbles: true,
-          detail: { sessionName: this.sessionName },
+          detail: { sessionName: this.sessionName }
         })
       );
     });

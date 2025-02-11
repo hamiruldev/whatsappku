@@ -46,8 +46,8 @@ class ImageGenerator:
             base_price = float(price_match.group(1))
             
             # Calculate buy and sell prices
-            buy_price = base_price * 1.02  # 2% markup
-            sell_price = base_price * 0.98  # 2% markdown
+            buy_price = base_price 
+            sell_price = base_price * 0.91  # 9% spread
             
             return {
                 'sell': f"{sell_price:.2f}",
@@ -85,7 +85,7 @@ class ImageGenerator:
             draw = ImageDraw.Draw(img)
             
             # Load font
-            font_path = os.path.join(current_app.root_path, 'static', 'fonts', 'Arial.ttf')
+            font_path = os.path.join(current_app.root_path, 'static', 'fonts', 'arial.ttf')
             font_large = ImageFont.truetype(font_path, 60)
             font_small = ImageFont.truetype(font_path, 40)
             font_title = ImageFont.truetype(font_path, 50)
