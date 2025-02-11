@@ -70,7 +70,7 @@ class MessageList extends HTMLElement {
         const response = await fetch("/api/scheduled-messages", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({
             session: this.sessionName, // Include session name if available
@@ -78,8 +78,8 @@ class MessageList extends HTMLElement {
             minute,
             phone: data.phone,
             message: data.message,
-            message_type: data.type,
-          }),
+            message_type: data.type
+          })
         });
 
         const result = await response.json();
@@ -88,9 +88,9 @@ class MessageList extends HTMLElement {
         const response = await fetch(`/api/scheduled-messages`, {
           method: "DELETE",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
-          body: JSON.stringify({ id: data.id }),
+          body: JSON.stringify({ id: data.id })
         });
 
         const result = await response.json();
@@ -111,14 +111,16 @@ class MessageList extends HTMLElement {
         defaultValue: true,
         change: (args) => {
           console.log(args);
-        },
+        }
       });
 
       switchObj.appendTo(inputElement);
     }
 
     var phoneElem, phoneObj;
+    var targetElem, targetObj;
     var typeElem, typeObj;
+
     var grid = new ej.grids.Grid({
       dataSource: this.messages,
       allowPaging: true,
@@ -136,7 +138,7 @@ class MessageList extends HTMLElement {
         allowAdding: true,
         allowDeleting: true,
         allowDragging: false,
-        mode: "Dialog",
+        mode: "Dialog"
       },
 
       columns: [
@@ -148,7 +150,7 @@ class MessageList extends HTMLElement {
           width: 100,
           visible: true, // Hide ID in edit/create modes
           allowFiltering: false,
-          allowSorting: false,
+          allowSorting: false
         },
         {
           field: "enabled",
@@ -158,7 +160,7 @@ class MessageList extends HTMLElement {
           template: "#enabledTemplate",
           visible: true,
           allowFiltering: false,
-          allowSorting: false,
+          allowSorting: false
         },
         {
           field: "time",
@@ -169,31 +171,31 @@ class MessageList extends HTMLElement {
           editType: "datetimepickeredit",
           format: "dd/MM/yyyy hh:mm",
           visible: true,
-          defaultValue: getFormattedNow(),
+          defaultValue: getFormattedNow()
         },
 
         {
-          field: "type",
-          headerText: "Type",
+          field: "target",
+          headerText: "Target",
           textAlign: "Left",
           width: 150,
           allowFiltering: false,
           allowSorting: true,
           edit: {
             create: function () {
-              typeElem = document.createElement("input");
-              typeElem.type = "text";
-              typeElem.tabIndex = "1";
-              return typeElem;
+              targetElem = document.createElement("input");
+              targetElem.type = "text";
+              targetElem.tabIndex = "1";
+              return targetElem;
             },
             read: function () {
-              return typeObj.value;
+              return targetObj.value;
             },
             destroy: function () {
-              typeObj.destroy();
+              targetObj.destroy();
             },
             write: function (args) {
-              function togglePhoneRow(condition) {
+              function handleTarget(condition) {
                 // Find the input element
                 const phoneInput = document.querySelector("input#gridphone");
 
@@ -212,32 +214,31 @@ class MessageList extends HTMLElement {
                 }
               }
 
-              typeObj = new ej.dropdowns.DropDownList({
+              targetObj = new ej.dropdowns.DropDownList({
                 dataSource: ["story", "chat"], // Use window.allContacts as the data source
-                placeholder: "Select a type",
+                placeholder: "Select a target",
                 floatLabelType: "Always",
-                value: args.rowData.type ?? "chat",
+                value: args.rowData.target ?? "chat",
                 created: function () {
-                  if (args.rowData.type === "story") {
-                    togglePhoneRow(true);
+                  if (args.rowData.target === "story") {
+                    handleTarget(true);
                   } else {
-                    togglePhoneRow(false);
+                    handleTarget(false);
                   }
                 },
                 change: (args) => {
                   if (args.value === "story") {
-                    togglePhoneRow(true);
+                    handleTarget(true);
                   } else {
-                    togglePhoneRow(false);
+                    handleTarget(false);
                   }
-                },
+                }
               });
-              typeObj.appendTo(typeElem);
-            },
+              targetObj.appendTo(targetElem);
+            }
           },
-          visible: true,
+          visible: true
         },
-
         {
           field: "phone",
           headerText: "Phone Number",
@@ -264,12 +265,12 @@ class MessageList extends HTMLElement {
                 placeholder: "Select a contact",
                 floatLabelType: "Never",
                 allowFiltering: true,
-                filterType: "contains",
+                filterType: "contains"
               });
               phoneObj.appendTo(phoneElem);
-            },
+            }
           },
-          visible: true,
+          visible: true
         },
         {
           field: "message",
@@ -280,8 +281,73 @@ class MessageList extends HTMLElement {
           visible: true,
           rows: 3,
           allowFiltering: false,
-          allowSorting: false,
+          allowSorting: false
         },
+        {
+          field: "type",
+          headerText: "Type",
+          textAlign: "Left",
+          width: 150,
+          allowFiltering: false,
+          allowSorting: true,
+          edit: {
+            create: function () {
+              typeElem = document.createElement("input");
+              typeElem.type = "text";
+              typeElem.tabIndex = "1";
+              return typeElem;
+            },
+            read: function () {
+              return typeObj.value;
+            },
+            destroy: function () {
+              typeObj.destroy();
+            },
+            write: function (args) {
+              function handleType(condition) {
+                // Find the input element
+                const phoneInput = document.querySelector("input#gridphone");
+
+                if (phoneInput) {
+                  // Find the closest <tr> element containing the input
+                  const rowElement = phoneInput.closest("tr");
+
+                  if (rowElement) {
+                    // Hide or show the row based on the condition
+                    if (condition) {
+                      rowElement.style.display = "none"; // Hide the row
+                    } else {
+                      rowElement.style.display = ""; // Show the row
+                    }
+                  }
+                }
+              }
+
+              typeObj = new ej.dropdowns.DropDownList({
+                dataSource: ["image", "audio", "video", "pdf"], // Use window.allContacts as the data source
+                placeholder: "Select a media type",
+                floatLabelType: "Always",
+                value: args.rowData.type ?? "image",
+                created: function () {
+                  // if (args.rowData.type === "story") {
+                  // handleType(true);
+                  // } else {
+                  //  handleType(false);
+                  //}
+                },
+                change: (args) => {
+                  //if (args.value === "story") {
+                  //    handleType(true);
+                  // } else {
+                  //   handleType(false);
+                  // }
+                }
+              });
+              typeObj.appendTo(typeElem);
+            }
+          },
+          visible: true
+        }
       ],
 
       toolbar: ["Add", "Edit", "Delete"],
@@ -361,12 +427,12 @@ class MessageList extends HTMLElement {
               await this.toggleMessage(args.data, newEnabled);
               args.data.enabled = newEnabled;
               grid.refresh();
-            },
+            }
           });
 
           switchObj.appendTo(inputElement);
         }
-      },
+      }
     });
 
     grid.appendTo(this.querySelector("#grid"));

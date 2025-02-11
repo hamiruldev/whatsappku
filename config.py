@@ -41,6 +41,18 @@ class Config:
     
     # Media URL
     MEDIA_URL = os.getenv('MEDIA_URL')
+    
+    # NAS Configuration
+    USE_NAS_STORAGE = os.getenv('USE_NAS_STORAGE', 'False').lower() == 'true'
+    NAS_CONFIG = {
+        'server_ip': os.getenv('NAS_SERVER_IP', '192.168.1.100'),
+        'port': int(os.getenv('NAS_PORT', '5000')),
+        'username': os.getenv('NAS_USERNAME'),
+        'password': os.getenv('NAS_PASSWORD'),
+        'use_https': os.getenv('NAS_USE_HTTPS', 'False').lower() == 'true',
+        'verify_ssl': os.getenv('NAS_VERIFY_SSL', 'False').lower() == 'true',
+        'dsm_version': int(os.getenv('NAS_DSM_VERSION', '7'))
+    }
 
 class DevelopmentConfig(Config):
     DEBUG = True

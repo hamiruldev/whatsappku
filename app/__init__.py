@@ -20,10 +20,18 @@ def create_app():
     # Use the appropriate config class based on environment
     app.config.from_object(config[env])
 
+    # Add these configurations to your Flask app
+    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
     with app.app_context():
         # Import and register routes
         from app.routes import register_routes
         register_routes(app)
+        
+        # Register the media blueprint
+        from app.controllers.media import media_bp
+        app.register_blueprint(media_bp, url_prefix='/api/media')
         
         # Start the scheduler
         if not scheduler.running:
