@@ -86,3 +86,26 @@ function isMobile() {
   const isSmallScreen = window.innerWidth <= 768; // Common breakpoint for mobile screens
   return isMobileUserAgent || isSmallScreen;
 }
+
+// Function to get a valid start time, 3 minutes ahead if needed
+function getValidStartTime(startTime) {
+  const currentDate = new Date(); // Current date and time
+  const parsedDate = new Date(startTime);
+
+  // Check if the time part is 00:00:00
+  if (
+    parsedDate.getHours() === 0 &&
+    parsedDate.getMinutes() === 0 &&
+    parsedDate.getSeconds() === 0
+  ) {
+    // Keep the date from parsedDate but use current time + 3 minutes
+    parsedDate.setHours(currentDate.getHours());
+    parsedDate.setMinutes(currentDate.getMinutes() + 3);
+    parsedDate.setSeconds(currentDate.getSeconds());
+    return parsedDate;
+  }
+
+  // Otherwise, return the provided date and time + 3 minutes
+  parsedDate.setMinutes(parsedDate.getMinutes() + 3);
+  return parsedDate;
+}

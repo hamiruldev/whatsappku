@@ -261,6 +261,7 @@ class SessionManager extends HTMLElement {
                 cursor: pointer;
             }
         </style>
+    
             <div class="glass rounded-2xl p-6 shadow-lg">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-bold text-white">Sessions</h2>
@@ -607,7 +608,15 @@ class SessionManager extends HTMLElement {
           content: ".test-message-container"
         }
       ],
-      selected: (args) => this.handleTabChange(args, sessionName)
+      selecting: (args) => {
+        if (args.isSwiped) {
+          args.cancel = true;
+          return;
+        }
+      },
+      selected: (args) => {
+        this.handleTabChange(args, sessionName);
+      }
     });
 
     dialog.appendTo("#managementDialog");

@@ -37,6 +37,8 @@ class ScheduleManager extends HTMLElement {
       this.events = this.convertToScheduleEvents(
         this.sessionName ? data.data : data
       );
+
+      console.log("this.events", this.events);
     } catch (error) {
       console.error("Error loading schedules:", error);
       this.events = [];
@@ -44,22 +46,39 @@ class ScheduleManager extends HTMLElement {
   }
 
   convertToScheduleEvents(messages) {
-    return messages.map((msg) => ({
-      Id: msg.id,
-      Subject: `Message to ${msg.phone}`,
-      StartTime: new Date(msg.time),
-      EndTime: new Date(new Date(msg.time).getTime() + 30 * 60000), // 30 min duration
-      IsAllDay: false,
-      Status: msg.enabled ? "Active" : "Inactive",
-      Priority: "High",
-      Description: msg.message,
-      RecurrenceRule: msg.recurrence || "",
-      // Custom fields
-      phone: msg.phone,
-      target: msg.target || "chat",
-      type: msg.type || "text",
-      messageText: msg.message
-    }));
+    console.log("messages--->", messages);
+
+    return messages.map((msg) => {
+      // Parse the date and time explicitly from "dd/MM/yyyy HH:mm"
+      const [day, month, yearAndTime] = msg.time.split("/");
+      const [year, time] = yearAndTime.split(" ");
+      const [hours, minutes] = time.split(":");
+
+      const startDate = new Date(
+        parseInt(year, 10), // Year
+        parseInt(month, 10) - 1, // Month (0-based index)
+        parseInt(day, 10), // Day
+        parseInt(hours, 10), // Hours
+        parseInt(minutes, 10) // Minutes
+      );
+
+      return {
+        Id: msg.id,
+        Subject: `Message to ${msg.phone || "unknown"}`,
+        StartTime: startDate,
+        EndTime: new Date(startDate.getTime() + 30 * 60000), // 30 min duration
+        IsAllDay: false,
+        Status: msg.enabled ? "Active" : "Inactive",
+        Priority: "High",
+        Description: msg.message,
+        RecurrenceRule: msg.recurrence || "",
+        // Custom fields
+        phone: msg.phone,
+        target: msg.target || "chat",
+        type: msg.type || "text",
+        messageText: msg.message
+      };
+    });
   }
 
   render() {
@@ -101,17 +120,22 @@ class ScheduleManager extends HTMLElement {
       views: ["Day", "Week", "Month"],
       currentView: "Month",
       enableAdaptiveUI: true,
-      showQuickInfo: true,
+      showQuickInfo: false,
       popupOpen: (args) => this.handlePopupOpen(args),
       actionBegin: (args) => this.handleActionBegin(args),
-      //actionComplete: (args) => this.handleActionComplete(args),
+      actionComplete: (args) => this.handleActionComplete(args),
       eventRendered: (args) => this.handleEventRendered(args)
     });
 
     this.scheduleObj.appendTo(this.querySelector("#schedule"));
   }
 
+  handleActionComplete(args) {
+    console.log("args handleActionComplete--->", args);
+  }
+
   async handlePopupOpen(args) {
+    console.log("args handlePopupOpen--->", args);
     if (args.type === "Editor") {
       // Prevent default editor
       args.cancel = true;
@@ -126,8 +150,8 @@ class ScheduleManager extends HTMLElement {
       header: eventData.Id ? "Edit Schedule" : "New Schedule",
       content: this.getMessageDialogContent(eventData),
       showCloseIcon: true,
-      width: "500px",
-      height: "600px",
+      width: isMobile() ? "100%" : "500px",
+      height: isMobile() ? "100%" : "600px",
       isModal: true,
       visible: false,
       buttons: [
@@ -152,38 +176,42 @@ class ScheduleManager extends HTMLElement {
 
   getMessageDialogContent(data) {
     return `
-            <div class="schedule-dialog-content">
-                <div class="input-group mb-4">
-                    <label>Target</label>
-                    <input type="text" id="target" class="e-input">
-                </div>
-                
-                <div class="input-group mb-4">
-                    <label>Phone Number</label>
-                    <input type="text" id="phone" class="e-input">
-                </div>
 
-                <div class="input-group mb-4">
-                    <label>Message</label>
-                    <textarea id="message" class="e-input" rows="3"></textarea>
-                </div>
-
-                <div class="input-group mb-4">
-                    <label>Type</label>
-                    <input type="text" id="type" class="e-input">
-                </div>
-
-                <div class="input-group mb-4">
-                    <label>Schedule Time</label>
-                    <input type="text" id="scheduleTime">
-                </div>
-
-                <div class="input-group mb-4">
-                    <label>Recurrence</label>
-                    <div id="recurrenceEditor"></div>
-                </div>
+        <div class="schedule-dialog-content">
+            <div class="input-group mb-4">
+                <label>Target</label>
+                <input type="text" id="target" class="e-input">
             </div>
-        `;
+            
+            <div class="input-group mb-4">
+                <label>Phone Number</label>
+                <input type="text" id="phone" class="e-input" value="60184644305">
+            </div>
+
+            <div class="input-group mb-4">
+                <label>Message</label>
+                <textarea id="message" class="e-input" rows="3"></textarea>
+            </div>
+
+            <div class="input-group mb-4">
+                <label>Type</label>
+                <input type="text" id="type" class="e-input">
+            </div>
+
+            <div id="imageEditorContainer" style="display: none;">
+            </div>
+
+            <div class="input-group mb-4">
+                <label>Schedule Time</label>
+                <input type="text" id="scheduleTime">
+            </div>
+
+            <div class="input-group mb-4">
+                <label>Recurrence</label>
+                <div id="recurrenceEditor"></div>
+            </div>
+        </div>
+    `;
   }
 
   initializeFormComponents(data) {
@@ -191,7 +219,12 @@ class ScheduleManager extends HTMLElement {
     new ej.dropdowns.DropDownList({
       dataSource: ["story", "chat"],
       value: data.target || "chat",
-      placeholder: "Select target"
+      placeholder: "Select target",
+      change: (args) => {
+        console.log("args--->", args);
+        if (args.value === "story") {
+        }
+      }
     }).appendTo("#target");
 
     // Phone autocomplete
@@ -206,13 +239,30 @@ class ScheduleManager extends HTMLElement {
     new ej.dropdowns.DropDownList({
       dataSource: ["text", "image", "audio", "video", "pdf"],
       value: data.type || "text",
-      placeholder: "Select type"
+      placeholder: "Select type",
+      change: (args) => {
+        console.log("args--->", args);
+        if (args.value === "image") {
+          // Add edit button next to type dropdown
+          this.showImageEditorDialog();
+        } else {
+          console.log("remove image editor container");
+          // Remove edit button if exists
+          const editBtn = document.querySelector("#imageEditorContainer");
+          if (editBtn) editBtn.remove();
+        }
+      }
     }).appendTo("#type");
+
+    const checkDateTime = getValidStartTime(data.StartTime);
+
+    console.log("checkDateTime--->", checkDateTime);
 
     // DateTime picker
     new ej.calendars.DateTimePicker({
-      value: data.StartTime || new Date(),
-      format: "dd/MM/yyyy HH:mm"
+      value: checkDateTime || new Date(),
+      format: "dd/MM/yyyy HH:mm",
+      min: new Date()
     }).appendTo("#scheduleTime");
 
     // Recurrence editor
@@ -227,17 +277,21 @@ class ScheduleManager extends HTMLElement {
       document.querySelector("#scheduleTime").ej2_instances[0].value;
     const dateObj = new Date(selectedTime);
 
+    // Get recurrence pattern
+    const recurrenceEditor =
+      document.querySelector("#recurrenceEditor").ej2_instances[0];
+    const recurrenceRule = recurrenceEditor.value;
+
     const formData = {
       target: document.querySelector("#target").ej2_instances[0].value,
-      phone: document.querySelector("#phone").ej2_instances[0].value,
+      phone: document.querySelector("#phone").value,
       message: document.querySelector("#message").value,
       type: document.querySelector("#type").ej2_instances[0].value,
-      time: selectedTime, // Keep the full datetime for display
-      // Extract hour and minute for the API
+      time: selectedTime, // Full datetime for display
       hour: dateObj.getHours(),
       minute: dateObj.getMinutes(),
-      recurrence:
-        document.querySelector("#recurrenceEditor").ej2_instances[0].value
+      start_date: dateObj.toISOString(), // Include the full date
+      recurrence: recurrenceRule // Include recurrence pattern
     };
 
     try {
@@ -254,10 +308,35 @@ class ScheduleManager extends HTMLElement {
       const result = await response.json();
 
       if (result.status === "success") {
+        // Create new event data
+        const newEventData = {
+          Id: result.id || originalData.Id,
+          Subject: `Message to ${formData.phone}`,
+          StartTime: dateObj,
+          EndTime: new Date(dateObj.getTime() + 30 * 60000),
+          IsAllDay: false,
+          Status: "Active",
+          Priority: "High",
+          Description: formData.message,
+          RecurrenceRule: formData.recurrence,
+          phone: formData.phone,
+          target: formData.target,
+          type: formData.type,
+          messageText: formData.message
+        };
+
+        // Update the schedule immediately
+        if (originalData.Id) {
+          this.scheduleObj.saveEvent(newEventData);
+        } else {
+          this.scheduleObj.addEvent(newEventData);
+        }
+
         showNotification("Schedule saved successfully", "success");
-        await this.loadSchedules();
-        this.scheduleObj.eventSettings.dataSource = this.events;
         dialog.hide();
+
+        // Refresh the full schedule after a short delay
+        setTimeout(() => this.loadSchedules(), 500);
       } else {
         throw new Error(result.message || "Failed to save schedule");
       }
@@ -274,6 +353,8 @@ class ScheduleManager extends HTMLElement {
   }
 
   handleActionBegin(args) {
+    console.log("args--->", args);
+
     if (args.requestType === "eventRemove") {
       args.cancel = true;
       this.deleteSchedule(args.data[0].Id);
@@ -299,6 +380,26 @@ class ScheduleManager extends HTMLElement {
       }
     } catch (error) {
       showNotification(`Error deleting schedule: ${error.message}`, "error");
+    }
+  }
+
+  showImageEditorDialog() {
+    const dialog = document.querySelector("#SharedDialog").ej2_instances[0];
+
+    dialog.header = "Image Template Editor";
+    dialog.content = "<image-editor></image-editor>";
+    dialog.showCloseIcon = true;
+    dialog.isModal = true;
+    dialog.visible = true;
+    dialog.position = { X: "center", Y: "center" };
+    dialog.cssClass = "full-screen-dialog";
+    dialog.width = "100%";
+    dialog.height = "100%";
+
+    if (isMobile()) {
+      dialog.show();
+    } else {
+      dialog.show(1);
     }
   }
 }

@@ -128,60 +128,41 @@ class WhatsAppAPI:
         return requests.post(url, json=payload)
 
     @classmethod
-    def send_status(cls, session, image_path, caption=None):
-        """Send an image as a status update"""
+    def send_status(cls, session, image_path, caption=""):
+        """Send an image to WhatsApp status"""
         try:
-            url = f"{cls._get_base_url()}/api/{session}/status/image"
+            # Ensure the file exists
+            if not os.path.exists(image_path):
+                raise FileNotFoundError(f"Image file not found: {image_path}")
             
-            # Get the image mimetype
-            mime_type = "image/png" if image_path.endswith('.png') else "image/jpeg"
-            filename = os.path.basename(image_path)
-            
-            imgUrl = f"{cls._get_media_url()}/static/images/gold_prices/{filename}"
-            
-            
-            # Read the image file and convert to base64
+            # Read the image file in binary mode
             with open(image_path, 'rb') as image_file:
-                image_data = base64.b64encode(image_file.read()).decode('utf-8')
-                data_url = f"data:{mime_type};base64,{image_data}"
+                files = {
+                    'file': ('status.png', image_file, 'image/png')
+                }
             
-            # Prepare the payload with base64 data
-            payload = {
-                "file": {
-                    "mimetype": mime_type,
-                    "filename": filename,
-                    "url": imgUrl  # Send base64 data URL instead of file URL
-                },
-                "contacts": None,
-                "caption": caption if caption else ""
+            data = {
+                'caption': caption
+            }
+            
+            url = f"{current_app.config['WAHA_API_URL']}/api/sendStatus"
+            headers = {
+                'session': session
             }
             
             response = requests.post(
-                url, 
-                json=payload,
-                headers={'Content-Type': 'application/json'},
-                timeout=90
+                url,
+                headers=headers,
+                data=data,
+                files=files
             )
+            
             response.raise_for_status()
-            
-            # Delete the image file after successful upload
-            try:
-                # os.remove(image_path)
-                current_app.logger.info(f"Successfully deleted image: {image_path}")
-            except Exception as e:
-                current_app.logger.warning(f"Failed to delete image {image_path}: {str(e)}")
-            
             return response.json()
             
         except Exception as e:
             current_app.logger.error(f"Error sending status: {str(e)}")
-            # Try to clean up the image even if status sending fails
-            try:
-                # os.remove(image_path)
-                current_app.logger.info(f"Successfully deleted image: {image_path}")
-            except:
-                pass
-            raise e
+            raise
 
     @classmethod
     def get_contacts(cls, contact_id=None):

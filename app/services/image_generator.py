@@ -67,72 +67,54 @@ class ImageGenerator:
     def create_price_image(price_data):
         """Create image with gold price data"""
         try:
-            # Get the template image path from config
-            template_path = current_app.config.get('PRICE_TEMPLATE_PATH', 
-                os.path.join(current_app.root_path, 'static', 'images', 'gold_template.png'))
-            
-            # Create output directory if it doesn't exist
-            output_dir = os.path.join(current_app.root_path, 'static', 'images', 'gold_prices')
-            os.makedirs(output_dir, exist_ok=True)
-            
-            # Generate unique filename with timestamp
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_filename = f"gold_price_{timestamp}.png"
-            output_path = os.path.join(output_dir, output_filename)
+            # Get template configuration
+            template_config = current_app.config.get('TEMPLATE_CONFIG', {
+                'templateUrl': os.path.join(current_app.root_path, 'static', 'images', 'gold_template.png'),
+                'textBoxes': [
+                    {
+                        'id': 'price',
+                        'x': 50,
+                        'y': 170,
+                        'text': 'Current: RM {price}/gram'
+                    },
+                    # ... other text boxes
+                ]
+            })
             
             # Open template image
-            img = Image.open(template_path)
+            img = Image.open(template_config['templateUrl'])
             draw = ImageDraw.Draw(img)
             
             # Load font
             font_path = os.path.join(current_app.root_path, 'static', 'fonts', 'arial.ttf')
-            font_large = ImageFont.truetype(font_path, 60)
-            font_small = ImageFont.truetype(font_path, 40)
-            font_title = ImageFont.truetype(font_path, 50)
+            font = ImageFont.truetype(font_path, 60)
             
-            # Add title
-            draw.text(
-                (50, 30),
-                "Public Gold Price Update",
-                font=font_title,
-                fill=(255, 255, 255)
+            # Draw text boxes from configuration
+            for box in template_config['textBoxes']:
+                text = box['text'].format(
+                    price=price_data['base'],
+                    buy=price_data['buy'],
+                    sell=price_data['sell'],
+                    timestamp=price_data['timestamp']
+                )
+                
+                draw.text(
+                    (box['x'], box['y']),
+                    text,
+                    font=font,
+                    fill=(255, 255, 255)
+                )
+            
+            # Save and return
+            output_path = os.path.join(
+                current_app.root_path, 
+                'static', 
+                'images', 
+                'gold_prices', 
+                f"gold_price_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
             )
             
-            # Add timestamp
-            draw.text(
-                (50, 100),
-                f"Updated: {price_data['timestamp']}",
-                font=font_small,
-                fill=(200, 200, 200)
-            )
-            
-            # Add base price
-            draw.text(
-                (50, 170),
-                f"Current: RM {price_data['base']}/gram",
-                font=font_large,
-                fill=(255, 255, 255)
-            )
-            
-            # Add buy price
-            draw.text(
-                (50, 250),
-                f"Buy: RM {price_data['buy']}/gram",
-                font=font_large,
-                fill=(0, 255, 0)
-            )
-            
-            # Add sell price
-            draw.text(
-                (50, 330),
-                f"Sell: RM {price_data['sell']}/gram",
-                font=font_large,
-                fill=(255, 215, 0)
-            )
-            
-            # Save image to static directory
             img.save(output_path)
-            
             return output_path
             
         except Exception as e:

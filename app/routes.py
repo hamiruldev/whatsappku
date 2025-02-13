@@ -89,7 +89,10 @@ def register_routes(app):
                     minute=data.get('minute'),
                     phone=data.get('phone'),
                     message=data.get('message'),
-                    type=data.get('type')
+                    type=data.get('type'),
+                    target=data.get('target'),
+                    start_date=data.get('start_date'),
+                    recurrence=data.get('recurrence')
                 )
                 
                 return jsonify({
@@ -98,6 +101,7 @@ def register_routes(app):
                     'message': 'Scheduled message created'
                 })
             except Exception as e:
+                current_app.logger.error(f"Error in create_scheduled_message: {str(e)}")
                 return jsonify({
                     'status': 'error',
                     'message': str(e)
@@ -388,3 +392,12 @@ def register_routes(app):
             return jsonify({'success': True, 'message': 'Message sent successfully'}), 200
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 400
+
+    @app.route('/api/media/template-config', methods=['GET', 'POST'])
+    def handle_template_config():
+        if request.method == 'POST':
+            config = request.json
+            current_app.config['TEMPLATE_CONFIG'] = config
+            return jsonify({'success': True})
+        else:
+            return jsonify(current_app.config.get('TEMPLATE_CONFIG', {}))
