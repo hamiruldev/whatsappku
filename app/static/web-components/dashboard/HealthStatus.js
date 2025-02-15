@@ -4,7 +4,7 @@ class HealthStatus extends HTMLElement {
     this.health = {
       healthy: false,
       lastCheck: null,
-      details: null,
+      details: null
     };
   }
 
@@ -27,7 +27,7 @@ class HealthStatus extends HTMLElement {
       this.health = {
         healthy: data.healthy,
         lastCheck: new Date(data.timestamp),
-        details: data.details,
+        details: data.details
       };
       this.render();
     } catch (error) {
@@ -50,7 +50,7 @@ class HealthStatus extends HTMLElement {
     this.innerHTML = `
             <div class="glass rounded-2xl p-6 shadow-lg">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold text-white">WAHA API Status</h2>
+                    <h2 class="text-xl font-bold text-white">WHATSAPP API Status</h2>
                     <span class="px-3 py-1 rounded-full ${statusClass} text-white text-sm">
                         ${statusText}
                     </span>

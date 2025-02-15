@@ -2,6 +2,10 @@ from flask import current_app, render_template, request, jsonify
 from app.controllers import scheduler, whatsapp
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
+import os
+from werkzeug.utils import secure_filename
+
+from app.utils.media import allowed_file, get_media_tags, get_media_type, save_media_tags
 
 def register_routes(app):
     @app.route("/")
@@ -209,9 +213,9 @@ def register_routes(app):
     @app.route('/api/health', methods=['GET'])
     def check_waha_health():
         """Endpoint to manually check WAHA API health"""
-        from app.services.health_check import HealthCheckService
         
-        is_healthy, health_data = HealthCheckService.check_waha_health()
+        from app.services.whatsapp_api import WhatsAppAPI
+        is_healthy, health_data = whatsapp.WhatsAppAPI.check_waha_health()
         
         return jsonify({
             'healthy': is_healthy,
@@ -401,3 +405,86 @@ def register_routes(app):
             return jsonify({'success': True})
         else:
             return jsonify(current_app.config.get('TEMPLATE_CONFIG', {}))
+
+    @app.route('/api/media', methods=['GET'])
+    def get_media():
+        """Get all media files with their metadata"""
+        try:
+            media_dir = os.path.join(current_app.root_path, 'static', 'media')
+            media_list = []
+            
+            for filename in os.listdir(media_dir):
+                file_path = os.path.join(media_dir, filename)
+                if os.path.isfile(file_path):
+                    media_type = get_media_type(filename)
+                    media_list.append({
+                        'id': filename,
+                        'name': filename,
+                        'type': media_type,
+                        'url': f'/static/media/{filename}',
+                        'tags': get_media_tags(filename),
+                        'format': os.path.splitext(filename)[1][1:],
+                        'created': os.path.getctime(file_path)
+                    })
+                    
+            return jsonify(media_list)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/media/upload', methods=['POST'])
+    def upload_media():
+        """Upload media files"""
+        try:
+            # Try both methods to fetch files
+            files = request.files.getlist('files[]') or request.files.getlist('files')
+
+            print("request.files:", request.files)  # Debugging
+            print("Extracted files:", files)  # Debugging
+
+            uploaded_files = []
+
+            for file in files:
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    file_path = os.path.join(current_app.root_path, 'static', 'media', filename)
+                    file.save(file_path)
+                    uploaded_files.append(filename)
+
+            return jsonify({'success': True, 'files': uploaded_files})
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/media/<media_id>', methods=['DELETE'])
+    def delete_media(media_id):
+        """Delete a media file"""
+        try:
+            file_path = os.path.join(current_app.root_path, 'static', 'media', media_id)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                return jsonify({'success': True})
+            return jsonify({'error': 'File not found'}), 404
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/media/remove', methods=['POST'])
+    def remove_media():
+        """Remove a media file"""
+        try:
+            file_name = request.files.getlist('files[]') or request.files.getlist('files')
+            
+            if not file_name:
+                return jsonify({'error': 'Filename is required'}), 400
+            
+            # Construct the full file path
+            file_path = os.path.join(current_app.root_path, 'static', 'media', file_name[0].filename)
+
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                return jsonify({'success': True, 'message': f'{file_name} deleted successfully'})
+            
+            return jsonify({'error': 'File not found'}), 404
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        

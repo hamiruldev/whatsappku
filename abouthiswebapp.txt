@@ -1,0 +1,74 @@
+PRODUCT OF WHATSAPP, AN AUTOMATION CRM WEB APP FOR SMALL BUSINESS TO GROW THEIR BUSINESS USING WHATSAPP 
+
+KEY FEATURES:
+1. CREATE SESSIONS AND MANAGE YOUR WHATSAPP BUSINESS ACCOUNT
+2. CREATE AND MANAGE YOUR MEDIA LIBRARY
+3. CREATE AND MANAGE YOUR SCHEDULED POSTS, STATUS, BROADCAST, DIRECT MESSAGE IN CALENDAR VIEW
+4. CREATE AND MANAGE YOUR AUTOMATION RULES
+5. CREATE AND MANAGE YOUR NOTIFICATIONS AND LOGS
+6. CREATE AND MANAGE YOUR CUSTOMER LIKE BIRTHDAY, ANNIVERSARY, ENGAGEMENT, WEDDING, FOLLOW UP, AND MORE
+
+
+1. Dashboard
+Overview of scheduled posts (calendar view)
+Quick stats: Pending, Scheduled, Posted, Failed
+Recent media uploads
+Upcoming posts
+Engagement insights (if applicable in future updates)
+
+2. Content Creation Flow
+Step 1: Choose Social Media Platform
+WhatsApp (Current)
+Instagram (Future)
+TikTok (Future)
+Step 2: Select Post Type
+WhatsApp: Direct Message, Broadcast, Status
+Instagram: Post, Reel, Story
+TikTok: Post, Story
+Step 3: Create & Customize Media
+Text Editor (for captions)
+Image Editor (filters, text overlay, stickers)
+Video Editor (trimming, adding audio, effects)
+AI-generated content (text, images, video clips)
+Step 4: Preview & Schedule
+Preview post layout (how it looks on WhatsApp, IG, TikTok)
+Schedule Post (Calendar-based)
+Immediate or Delayed Posting
+Set Expiry for WhatsApp Status
+Time zone selection
+Step 5: Automation Rules (Optional)
+Recurring posts (daily, weekly, monthly)
+Auto-delete after X hours
+Trigger-based posting (e.g., based on user interaction or a specific date/event)
+
+
+4. Calendar View
+Monthly, Weekly, Daily views
+Drag & Drop to reschedule
+Filter by platform, post type, status (scheduled, posted, failed)
+Edit, delete, or duplicate scheduled posts
+
+5. Media Library
+Store & organize images, videos, and audio
+Tagging & categorization
+Bulk uploads
+Integration with NAS (Synology) for media storage
+AI-based media search & recommendations
+
+6. Future Enhancements (Considerations)
+AI-driven best posting time recommendations
+Engagement analytics & reports
+Hashtag & caption recommendations
+Automated comment/DM replies (AI chatbot for social media)
+
+7. Integration & API Settings
+WhatsApp API (Waha API)
+Instagram Graph API (Future)
+TikTok API (Future)
+PocketBase integration for database management
+Webhook support for external automation tools (Zapier, Make, etc.)
+
+8. Notifications & Logs
+Success/Failure alerts for scheduled posts
+WhatsApp notifications for upcoming posts
+Error logs & troubleshooting suggestions

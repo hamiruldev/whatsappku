@@ -1,5 +1,4 @@
 from apscheduler.schedulers.background import BackgroundScheduler
-from app.services.health_check import HealthCheckService
 from app.services.whatsapp_api import WhatsAppAPI
 import pytz
 from flask import current_app
@@ -53,6 +52,7 @@ def create_message_sender(app):
                 current_app.logger.exception("Full traceback:")
                 raise e
     return send_message
+
 
 def add_scheduled_message(session_name, hour, minute, phone, message, type="text", target="chat", start_date=None, recurrence=None):
     """Add a new scheduled message with optional recurrence"""
@@ -221,8 +221,8 @@ def check_waha_health():
     """Scheduled task to check WAHA API health"""
     app = current_app._get_current_object()
     with app.app_context():
-        is_healthy, health_data = HealthCheckService.check_waha_health()
-        HealthCheckService.log_health_status(is_healthy, health_data)
+        is_healthy, health_data = WhatsAppAPI.check_waha_health()
+        WhatsAppAPI.log_health_status(is_healthy, health_data)
         
         if not is_healthy:
             # Optionally send notification or take action when unhealthy

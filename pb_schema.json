@@ -1,195 +1,1842 @@
 [
-  {
-    "id": "_pb_users_auth_",
-    "name": "usersku",
-    "type": "auth",
-    "system": false,
-    "schema": [
-      {
+    {
+        "id": "_pb_users_auth_",
+        "name": "usersku",
+        "type": "auth",
         "system": false,
-        "id": "pqi6mnvt",
-        "name": "full_name",
-        "type": "text",
-        "required": false,
-        "presentable": false,
-        "unique": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "pqi6mnvt",
+                "name": "full_name",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "users_no_ic",
+                "name": "no_ic",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": "^[0-9]+$"
+                }
+            },
+            {
+                "system": false,
+                "id": "hih0iez6",
+                "name": "ic_img_url",
+                "type": "url",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "exceptDomains": null,
+                    "onlyDomains": null
+                }
+            },
+            {
+                "system": false,
+                "id": "users_phone",
+                "name": "phone",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": "^[0-9]+$"
+                }
+            },
+            {
+                "system": false,
+                "id": "jwupxzwb",
+                "name": "bio",
+                "type": "json",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "cjqqujel",
+                "name": "avatar_url",
+                "type": "url",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "exceptDomains": null,
+                    "onlyDomains": null
+                }
+            },
+            {
+                "system": false,
+                "id": "th8x4f1h",
+                "name": "bank_details",
+                "type": "json",
+                "required": false,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "cwyu1hi1",
+                "name": "referal_code",
+                "type": "relation",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "_pb_users_auth_",
+                    "cascadeDelete": true,
+                    "minSelect": null,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "c071dqcw",
+                "name": "kodku",
+                "type": "text",
+                "required": false,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            }
+        ],
+        "indexes": [
+            "CREATE INDEX `idx_oihBJVI` ON `usersku` (`full_name`)",
+            "CREATE UNIQUE INDEX `idx_xsH6hkY` ON `usersku` (`kodku`)"
+        ],
+        "listRule": "",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "",
+        "updateRule": "@request.auth.id != \"\"",
+        "deleteRule": null,
         "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
+            "allowEmailAuth": true,
+            "allowOAuth2Auth": false,
+            "allowUsernameAuth": true,
+            "exceptEmailDomains": null,
+            "manageRule": null,
+            "minPasswordLength": 8,
+            "onlyEmailDomains": null,
+            "onlyVerified": false,
+            "requireEmail": true
         }
-      },
-      {
+    },
+    {
+        "id": "bilikku_payments_id",
+        "name": "bilikku_payments",
+        "type": "base",
         "system": false,
-        "id": "users_no_ic",
-        "name": "no_ic",
-        "type": "text",
-        "required": false,
-        "presentable": false,
-        "unique": true,
-        "options": {
-          "min": null,
-          "max": null,
-          "pattern": "^[0-9]+$"
-        }
-      },
-      {
+        "schema": [
+            {
+                "system": false,
+                "id": "payment_id",
+                "name": "payment_no",
+                "type": "text",
+                "required": false,
+                "presentable": true,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": 255,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "tenant_id",
+                "name": "tenant_name",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "bilikku_tenants_id",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "room_id",
+                "name": "room_name",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "bilikku_rooms_id",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "amount_id",
+                "name": "amount",
+                "type": "number",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": 0,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "payment_date_id",
+                "name": "payment_date",
+                "type": "date",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": "",
+                    "max": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "payment_type_id",
+                "name": "payment_type",
+                "type": "select",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "rental",
+                        "deposit",
+                        "penalty",
+                        "refund"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "payment_method_id",
+                "name": "payment_method",
+                "type": "select",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "cash",
+                        "bank_transfer",
+                        "credit_card",
+                        "other"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "status_id",
+                "name": "status",
+                "type": "select",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "pending",
+                        "completed",
+                        "failed",
+                        "refunded"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "notes_id",
+                "name": "notes",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": 500,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "mocdpmzi",
+                "name": "payment_gateway_transaction_id",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            }
+        ],
+        "indexes": [
+            "CREATE INDEX `idx_6UgtYUN` ON `bilikku_payments` (`payment_no`)",
+            "CREATE UNIQUE INDEX `idx_QUgJiFf` ON `bilikku_payments` (`payment_gateway_transaction_id`)"
+        ],
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "updateRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "deleteRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "options": {}
+    },
+    {
+        "id": "bilikku_rooms_id",
+        "name": "bilikku_rooms",
+        "type": "base",
         "system": false,
-        "id": "hih0iez6",
-        "name": "ic_img_url",
-        "type": "url",
-        "required": false,
-        "presentable": false,
-        "unique": false,
-        "options": {
-          "exceptDomains": null,
-          "onlyDomains": null
-        }
-      },
-      {
+        "schema": [
+            {
+                "system": false,
+                "id": "j77wd4ph",
+                "name": "house",
+                "type": "relation",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "bilikku_sublets_id",
+                    "cascadeDelete": false,
+                    "minSelect": null,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "uhnjx5pf",
+                "name": "name",
+                "type": "text",
+                "required": false,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "status_id",
+                "name": "status",
+                "type": "select",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "available",
+                        "occupied",
+                        "unavailable"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "xyv6lpos",
+                "name": "type",
+                "type": "select",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "Single Room",
+                        "Master Room",
+                        "Middle Room",
+                        "Small Room",
+                        "Studio",
+                        "Entire Unit"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "price_per_month_id",
+                "name": "price_per_month",
+                "type": "number",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": 0,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "deposit_amount_id",
+                "name": "deposit_amount",
+                "type": "number",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": 0,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "rooms_tenant_id",
+                "name": "tenants",
+                "type": "relation",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "_pb_users_auth_",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "tqnav4a8",
+                "name": "room_size",
+                "type": "number",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "sbqmgx04",
+                "name": "amenities",
+                "type": "editor",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "convertUrls": false
+                }
+            }
+        ],
+        "indexes": [
+            "CREATE INDEX `idx_1Qxya03` ON `bilikku_rooms` (`name`)"
+        ],
+        "listRule": "",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "updateRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "deleteRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "options": {}
+    },
+    {
+        "id": "bilikku_sublets_id",
+        "name": "bilikku_sublets",
+        "type": "base",
         "system": false,
-        "id": "users_phone",
-        "name": "phone",
-        "type": "text",
-        "required": false,
-        "presentable": false,
-        "unique": false,
-        "options": {
-          "min": null,
-          "max": null,
-          "pattern": "^[0-9]+$"
-        }
-      },
-      {
+        "schema": [
+            {
+                "system": false,
+                "id": "b8msdse7",
+                "name": "name",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "location_id",
+                "name": "location",
+                "type": "text",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": 255,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "rental_price_per_month_id",
+                "name": "rental_price_per_month",
+                "type": "number",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": 0,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "deposit_amount_id",
+                "name": "deposit_amount",
+                "type": "number",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": 0,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "status_id",
+                "name": "status",
+                "type": "select",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "available",
+                        "half occupied",
+                        "unavailable"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "aj0wwy8c",
+                "name": "total_room",
+                "type": "number",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": 1,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "wsotjemi",
+                "name": "description",
+                "type": "json",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "ucxpprzv",
+                "name": "total_occupied_rooms",
+                "type": "number",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "noDecimal": false
+                }
+            }
+        ],
+        "indexes": [],
+        "listRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "updateRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "deleteRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "options": {}
+    },
+    {
+        "id": "bilikku_tenants_id",
+        "name": "bilikku_tenants",
+        "type": "base",
         "system": false,
-        "id": "jwupxzwb",
-        "name": "bio",
-        "type": "json",
-        "required": false,
-        "presentable": false,
-        "unique": false,
-        "options": {
-          "maxSize": 2000000
-        }
-      },
-      {
+        "schema": [
+            {
+                "system": false,
+                "id": "kmbfbue3",
+                "name": "no_tenants",
+                "type": "text",
+                "required": false,
+                "presentable": true,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "tenant_id",
+                "name": "tenant_name",
+                "type": "relation",
+                "required": false,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "collectionId": "_pb_users_auth_",
+                    "cascadeDelete": false,
+                    "minSelect": null,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "room_id",
+                "name": "room_name",
+                "type": "relation",
+                "required": false,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "collectionId": "bilikku_rooms_id",
+                    "cascadeDelete": false,
+                    "minSelect": null,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "deposit_id",
+                "name": "deposit",
+                "type": "bool",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {}
+            },
+            {
+                "system": false,
+                "id": "lease_start_id",
+                "name": "lease_start",
+                "type": "date",
+                "required": false,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": "",
+                    "max": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "lease_end_id",
+                "name": "lease_end",
+                "type": "date",
+                "required": false,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": "",
+                    "max": ""
+                }
+            }
+        ],
+        "indexes": [
+            "CREATE INDEX `idx_VPcVWwN` ON `bilikku_tenants` (`no_tenants`)"
+        ],
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "  @request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "updateRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "deleteRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "options": {}
+    },
+    {
+        "id": "carku_car_models_id",
+        "name": "carku_car_models",
+        "type": "base",
         "system": false,
-        "id": "cjqqujel",
-        "name": "avatar_url",
-        "type": "url",
-        "required": false,
-        "presentable": false,
-        "unique": false,
-        "options": {
-          "exceptDomains": null,
-          "onlyDomains": null
-        }
-      },
-      {
+        "schema": [
+            {
+                "system": false,
+                "id": "model_make_field",
+                "name": "make",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "model_name_field",
+                "name": "model",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "model_year_field",
+                "name": "year",
+                "type": "number",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": 1900,
+                    "max": null,
+                    "noDecimal": true
+                }
+            },
+            {
+                "system": false,
+                "id": "model_specifications",
+                "name": "specifications",
+                "type": "json",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "model_features_list",
+                "name": "features",
+                "type": "json",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "model_images_list",
+                "name": "media_url",
+                "type": "json",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            }
+        ],
+        "indexes": [
+            "CREATE INDEX `idx_carku_models` ON `carku_car_models` (\n  `make`,\n  `model`,\n  `year`\n)"
+        ],
+        "listRule": null,
+        "viewRule": null,
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "options": {}
+    },
+    {
+        "id": "carku_listings_id",
+        "name": "carku_listings",
+        "type": "base",
         "system": false,
-        "id": "th8x4f1h",
-        "name": "bank_details",
-        "type": "json",
-        "required": false,
-        "presentable": true,
-        "unique": false,
-        "options": {
-          "maxSize": 2000000
-        }
-      },
-      {
+        "schema": [
+            {
+                "system": false,
+                "id": "listing_seller_id",
+                "name": "seller",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "carku_profiles_id",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "listing_car_model",
+                "name": "car_model",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "carku_car_models_id",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "listing_price_amount",
+                "name": "price",
+                "type": "number",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": 0,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "listing_mileage_km",
+                "name": "mileage",
+                "type": "number",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": 0,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "listing_condition",
+                "name": "condition",
+                "type": "select",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "new",
+                        "used",
+                        "certified"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "listing_status_field",
+                "name": "status",
+                "type": "select",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "available",
+                        "pending",
+                        "sold"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "listing_custom_features",
+                "name": "custom_features",
+                "type": "json",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "listing_custom_images",
+                "name": "custom_images",
+                "type": "json",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "listing_description",
+                "name": "description",
+                "type": "editor",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "convertUrls": false
+                }
+            },
+            {
+                "system": false,
+                "id": "rcro0n0f",
+                "name": "rebate",
+                "type": "number",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "noDecimal": false
+                }
+            }
+        ],
+        "indexes": [
+            "CREATE INDEX `idx_carku_listings` ON `carku_listings` (\n  `seller`,\n  `status`\n)"
+        ],
+        "listRule": null,
+        "viewRule": null,
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "options": {}
+    },
+    {
+        "id": "carku_templates_id",
+        "name": "carku_templates",
+        "type": "base",
         "system": false,
-        "id": "cwyu1hi1",
-        "name": "referal_code",
-        "type": "relation",
-        "required": false,
-        "presentable": false,
-        "unique": false,
-        "options": {
-          "collectionId": "_pb_users_auth_",
-          "cascadeDelete": true,
-          "minSelect": null,
-          "maxSelect": 1,
-          "displayFields": null
-        }
-      },
-      {
+        "schema": [
+            {
+                "system": false,
+                "id": "template_name_field",
+                "name": "name",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "template_description",
+                "name": "description",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": 500,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "template_data_field",
+                "name": "template_data",
+                "type": "json",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "template_is_active",
+                "name": "is_active",
+                "type": "bool",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {}
+            }
+        ],
+        "indexes": [],
+        "listRule": null,
+        "viewRule": null,
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "options": {}
+    },
+    {
+        "id": "carku_profiles_id",
+        "name": "carku_user_profiles",
+        "type": "base",
         "system": false,
-        "id": "c071dqcw",
-        "name": "kodku",
-        "type": "text",
-        "required": false,
-        "presentable": true,
-        "unique": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "profile_user_id",
+                "name": "user",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": true,
+                "options": {
+                    "collectionId": "_pb_users_auth_",
+                    "cascadeDelete": true,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "profile_business_name",
+                "name": "category_car_brand",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "profile_business_logo",
+                "name": "business_logo_url",
+                "type": "url",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "exceptDomains": null,
+                    "onlyDomains": null
+                }
+            },
+            {
+                "system": false,
+                "id": "profile_business_desc",
+                "name": "business_description",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": 500,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "profile_social_links",
+                "name": "social_links",
+                "type": "json",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "profile_contact_info",
+                "name": "contact_info",
+                "type": "json",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            },
+            {
+                "system": false,
+                "id": "profile_custom_domain",
+                "name": "custom_domain",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "ac1lvwol",
+                "name": "isAuthorizeNewCarDealer",
+                "type": "bool",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {}
+            },
+            {
+                "system": false,
+                "id": "mzsbrbub",
+                "name": "isAuthorizeUsedCarDealer",
+                "type": "bool",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {}
+            },
+            {
+                "system": false,
+                "id": "pyr5waqt",
+                "name": "prefered_location",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            }
+        ],
+        "indexes": [
+            "CREATE UNIQUE INDEX `idx_carku_profiles_user` ON `carku_user_profiles` (`user`)"
+        ],
+        "listRule": null,
+        "viewRule": null,
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "options": {}
+    },
+    {
+        "id": "i59r8ytbckyw4qm",
+        "name": "package",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "qr0ewufb",
+                "name": "tenant",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "tenants_collection_id",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "jvlbbfwb",
+                "name": "name",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "tuvvzi1e",
+                "name": "price",
+                "type": "number",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "noDecimal": false
+                }
+            },
+            {
+                "system": false,
+                "id": "gubk3yax",
+                "name": "description",
+                "type": "editor",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "convertUrls": false
+                }
+            }
+        ],
+        "indexes": [],
+        "listRule": null,
+        "viewRule": null,
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "options": {}
+    },
+    {
+        "id": "roles_collection_id",
+        "name": "roles",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "role_name",
+                "name": "name",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": 50,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "role_description",
+                "name": "description",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": 255,
+                    "pattern": ""
+                }
+            }
+        ],
+        "indexes": [],
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "options": {}
+    },
+    {
+        "id": "subscriptions_collection_id",
+        "name": "subscriptions",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "subscription_user",
+                "name": "user",
+                "type": "relation",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "collectionId": "_pb_users_auth_",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": [
+                        "email"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "subscription_tenant",
+                "name": "tenant",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "tenants_collection_id",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": [
+                        "name"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "wdhokpm8",
+                "name": "package",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "i59r8ytbckyw4qm",
+                    "cascadeDelete": false,
+                    "minSelect": null,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "subscription_status",
+                "name": "status",
+                "type": "select",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "active",
+                        "inactive",
+                        "canceled"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "subscription_start_date",
+                "name": "start_date",
+                "type": "date",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": "",
+                    "max": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "subscription_end_date",
+                "name": "end_date",
+                "type": "date",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": "",
+                    "max": ""
+                }
+            }
+        ],
+        "indexes": [],
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": null,
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "options": {}
+    },
+    {
+        "id": "tenant_roles_collection_id",
+        "name": "tenant_roles",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "tenant_roles_user",
+                "name": "user",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "_pb_users_auth_",
+                    "cascadeDelete": true,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "tenant_roles_tenant",
+                "name": "tenant",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "tenants_collection_id",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "tenant_roles_role",
+                "name": "role",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "roles_collection_id",
+                    "cascadeDelete": false,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "tenant_roles_created_at",
+                "name": "created_at",
+                "type": "date",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": "",
+                    "max": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "tenant_roles_status",
+                "name": "status",
+                "type": "select",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "active",
+                        "inactive"
+                    ]
+                }
+            }
+        ],
+        "indexes": [],
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "@request.auth.id != \"\"",
+        "updateRule": null,
+        "deleteRule": null,
+        "options": {}
+    },
+    {
+        "id": "tenants_collection_id",
+        "name": "tenants",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "tenant_name",
+                "name": "name",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": 255,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "tenant_description",
+                "name": "description",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": 500,
+                    "pattern": ""
+                }
+            }
+        ],
+        "indexes": [],
+        "listRule": null,
+        "viewRule": null,
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "options": {}
+    },
+    {
+        "id": "whatsappku_media_id",
+        "name": "whatsappku_media",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "media_name_field",
+                "name": "name",
+                "type": "text",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": 255,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "media_type_field",
+                "name": "type",
+                "type": "select",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "image",
+                        "video",
+                        "audio",
+                        "document"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "media_url_field",
+                "name": "url",
+                "type": "url",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "exceptDomains": null,
+                    "onlyDomains": null
+                }
+            },
+            {
+                "system": false,
+                "id": "j0fyvlap",
+                "name": "caption",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "media_tags_field",
+                "name": "tags",
+                "type": "json",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSize": 2000000
+                }
+            }
+        ],
+        "indexes": [
+            "CREATE UNIQUE INDEX `idx_G3ZcI94` ON `whatsappku_media` (`url`)"
+        ],
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "@request.auth.id != \"\"",
+        "updateRule": "@request.auth.id != \"\"",
+        "deleteRule": "@request.auth.id != \"\"",
+        "options": {}
+    },
+    {
+        "id": "whatsappku_scheduled_messages_id",
+        "name": "whatsappku_scheduled_messages",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "session_id",
+                "name": "session",
+                "type": "relation",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "whatsappku_sessions_id",
+                    "cascadeDelete": true,
+                    "minSelect": 1,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "zrxm7bir",
+                "name": "platform",
+                "type": "select",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "Whatsapp",
+                        "Instagram",
+                        "Tiktok"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "cv9hxcwb",
+                "name": "target",
+                "type": "select",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "status",
+                        "chat",
+                        "reel",
+                        "post"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "media_id",
+                "name": "media",
+                "type": "relation",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "whatsappku_media_id",
+                    "cascadeDelete": false,
+                    "minSelect": null,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "schedule_time",
+                "name": "schedule_time",
+                "type": "date",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": "",
+                    "max": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "recurrence",
+                "name": "recurrence",
+                "type": "select",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "none",
+                        "daily",
+                        "weekly",
+                        "monthly"
+                    ]
+                }
+            },
+            {
+                "system": false,
+                "id": "status",
+                "name": "status",
+                "type": "select",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "maxSelect": 1,
+                    "values": [
+                        "pending",
+                        "sent",
+                        "failed"
+                    ]
+                }
+            }
+        ],
+        "indexes": [],
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "@request.auth.id != \"\"",
+        "updateRule": "@request.auth.id != \"\"",
+        "deleteRule": "@request.auth.id != \"\"",
+        "options": {}
+    },
+    {
+        "id": "whatsappku_sessions_id",
+        "name": "whatsappku_sessions",
+        "type": "base",
+        "system": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "session_name",
+                "name": "name",
+                "type": "text",
+                "required": true,
+                "presentable": true,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": 255,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "18hwynrp",
+                "name": "userku",
+                "type": "relation",
+                "required": true,
+                "presentable": true,
+                "unique": false,
+                "options": {
+                    "collectionId": "_pb_users_auth_",
+                    "cascadeDelete": true,
+                    "minSelect": null,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
+                "id": "niehbky7",
+                "name": "phone",
+                "type": "number",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "noDecimal": false
+                }
+            }
+        ],
+        "indexes": [
+            "CREATE UNIQUE INDEX `idx_imDTE1C` ON `whatsappku_sessions` (`phone`)"
+        ],
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "updateRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "deleteRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "options": {}
+    },
+    {
+        "id": "cdqw8iv1bhuy7cx",
+        "name": "userku_lov",
+        "type": "view",
+        "system": false,
+        "schema": [
+            {
+                "system": false,
+                "id": "egiicpqr",
+                "name": "username",
+                "type": "text",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            }
+        ],
+        "indexes": [],
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
         "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
+            "query": "SELECT id, username from usersku"
         }
-      }
-    ],
-    "indexes": [
-      "CREATE INDEX `idx_oihBJVI` ON `usersku` (`full_name`)",
-      "CREATE UNIQUE INDEX `idx_xsH6hkY` ON `usersku` (`kodku`)"
-    ],
-    "listRule": "",
-    "viewRule": "@request.auth.id != \"\"",
-    "createRule": "",
-    "updateRule": "@request.auth.id != \"\"",
-    "deleteRule": null,
-    "options": {
-      "allowEmailAuth": true,
-      "allowOAuth2Auth": false,
-      "allowUsernameAuth": true,
-      "exceptEmailDomains": null,
-      "manageRule": null,
-      "minPasswordLength": 8,
-      "onlyEmailDomains": null,
-      "onlyVerified": false,
-      "requireEmail": true
     }
-  },
-  {
-    "id": "tenants_collection_id",
-    "name": "tenants",
-    "type": "base",
-    "system": false,
-    "schema": [
-      {
-        "system": false,
-        "id": "tenant_name",
-        "name": "name",
-        "type": "text",
-        "required": true,
-        "presentable": false,
-        "unique": true,
-        "options": {
-          "min": null,
-          "max": 255,
-          "pattern": ""
-        }
-      },
-      {
-        "system": false,
-        "id": "tenant_description",
-        "name": "description",
-        "type": "text",
-        "required": false,
-        "presentable": false,
-        "unique": false,
-        "options": {
-          "min": null,
-          "max": 500,
-          "pattern": ""
-        }
-      }
-    ],
-    "indexes": [],
-    "listRule": null,
-    "viewRule": null,
-    "createRule": null,
-    "updateRule": null,
-    "deleteRule": null,
-    "options": {}
-  }
 ]

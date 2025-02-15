@@ -1,14 +1,16 @@
 class DashboardContainer extends HTMLElement {
+  //<div class="p-3 black-white">
+  //  <h1 class="text-2xl text-white font-bold">Welcome Hamirul</h1>
+  //</div>
+
   connectedCallback() {
     this.innerHTML = `
       <div class="min-h-screen text-gray-900">
-        <div class="p-3 black-white">
-          <h1 class="text-2xl text-white font-bold">Welcome Hamirul</h1>
-        </div>
         <div class="p-3 flex flex-col space-y-6">
           <health-status></health-status>
           <session-manager></session-manager>
           <scheduler-settings></scheduler-settings>
+          <media-manager></media-manager>
         </div>
       </div>`;
   }

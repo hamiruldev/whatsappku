@@ -262,16 +262,16 @@ class SessionManager extends HTMLElement {
             }
         </style>
     
-            <div class="glass rounded-2xl p-6 shadow-lg">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-white">Sessions</h2>
-                <button id="newButtonSession" class="e-tbar-btn e-tbtn-txt e-control e-btn e-lib" type="button">
-                    <span class="e-btn-icon e-plus e-icons e-icon-left"></span>
-                    <span class="e-tbar-btn-text">New</span>
-                </button>
-                </div>
-                <div id="sessionsGrid" class="mt-4"></div>
+        <div class="glass rounded-2xl p-6 shadow-lg">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white">Sessions</h2>
+            <button id="newButtonSession" class="e-tbar-btn e-tbtn-txt e-control e-btn e-lib" type="button">
+                <span class="e-btn-icon e-plus e-icons e-icon-left"></span>
+                <span class="e-tbar-btn-text">New</span>
+            </button>
             </div>
+            <div id="sessionsGrid" class="mt-4"></div>
+        </div>
         <div id="managementDialog"></div>
         `;
   }
