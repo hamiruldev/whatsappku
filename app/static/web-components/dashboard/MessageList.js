@@ -3,6 +3,7 @@ class MessageList extends HTMLElement {
     super();
     this.messages = [];
     this.sessionName = this.getAttribute("sessionName");
+    this.isLoading = true;
   }
 
   static get observedAttributes() {
@@ -25,6 +26,7 @@ class MessageList extends HTMLElement {
   }
 
   async loadMessages() {
+    this.showSkeleton();
     try {
       let url = "/api/scheduled-messages";
 
@@ -57,6 +59,8 @@ class MessageList extends HTMLElement {
     } catch (error) {
       console.error("Error loading messages:", error);
       this.messages = [];
+    } finally {
+      this.hideSkeleton();
     }
   }
 
@@ -433,6 +437,20 @@ class MessageList extends HTMLElement {
 
           switchObj.appendTo(inputElement);
         }
+      },
+
+      // Add loading indicator
+      loadingIndicator: {
+        indicatorType: 'Shimmer'
+      },
+      
+      // Show loading on data operations
+      beforeDataBound: () => {
+        this.showSkeleton();
+      },
+      
+      dataBound: () => {
+        this.hideSkeleton();
       }
     });
 
@@ -456,13 +474,87 @@ class MessageList extends HTMLElement {
     });
   }
 
+  showSkeleton() {
+    this.isLoading = true;
+    const skeletonHtml = `
+      <div class="skeleton-loader">
+        ${Array(5).fill().map(() => `
+          <div class="skeleton-row">
+            <div class="skeleton-cell" style="width: 10%"></div>
+            <div class="skeleton-cell" style="width: 15%"></div>
+            <div class="skeleton-cell" style="width: 20%"></div>
+            <div class="skeleton-cell" style="width: 35%"></div>
+            <div class="skeleton-cell" style="width: 20%"></div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    
+    const gridElement = this.querySelector("#grid");
+    if (gridElement) {
+      gridElement.style.opacity = "0.4";
+      gridElement.insertAdjacentHTML('beforebegin', skeletonHtml);
+    }
+  }
+
+  hideSkeleton() {
+    this.isLoading = false;
+    const skeletonLoader = this.querySelector(".skeleton-loader");
+    if (skeletonLoader) {
+      skeletonLoader.remove();
+    }
+    const gridElement = this.querySelector("#grid");
+    if (gridElement) {
+      gridElement.style.opacity = "1";
+    }
+  }
+
   render() {
     const title = this.sessionName
       ? `Scheduled Messages for ${this.sessionName}`
       : "All Scheduled Messages";
 
     this.innerHTML = `
-      <div class="glass rounded-2xl text-white p-6 shadow-lg">
+      <style>
+        /* Existing styles... */
+        
+        .skeleton-loader {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1;
+          padding: 1rem;
+          background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .skeleton-row {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 1rem;
+          animation: pulse 1.5s infinite;
+        }
+        
+        .skeleton-cell {
+          height: 24px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        
+        @keyframes pulse {
+          0% {
+            opacity: 0.6;
+          }
+          50% {
+            opacity: 0.3;
+          }
+          100% {
+            opacity: 0.6;
+          }
+        }
+      </style>
+      
+      <div class="glass rounded-2xl text-white p-6 shadow-lg relative">
         <h2 class="text-2xl font-bold mb-4">${title}</h2>
         
         <script type="text/x-template" id="enabledTemplate">

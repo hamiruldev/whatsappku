@@ -23,7 +23,7 @@ scheduler = BackgroundScheduler(
 scheduler.start()
 
 def create_message_sender(app):
-    def send_message(phone, message, session_name=None, type="text", target="chat"):
+    def send_message(phone, message, session_name=None, type="text", target="Chat"):
         from app.controllers.whatsapp import WhatsAppController
         from app.services.image_generator import ImageGenerator
         
@@ -34,7 +34,7 @@ def create_message_sender(app):
             current_app.logger.info(f"Target: {target}")
             
             try:
-                if target == "story":
+                if target == "Status":
                     # Generate and post gold price status
                     result = ImageGenerator.generate_and_post_status(session_name)
                     if result is None:
@@ -54,7 +54,7 @@ def create_message_sender(app):
     return send_message
 
 
-def add_scheduled_message(session_name, hour, minute, phone, message, type="text", target="chat", start_date=None, recurrence=None):
+def add_scheduled_message(session_name, hour, minute, phone, message, type="text", target="Chat", start_date=None, recurrence=None):
     """Add a new scheduled message with optional recurrence"""
     try:
         app = current_app._get_current_object()

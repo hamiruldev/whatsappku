@@ -1,4 +1,4 @@
 env_variables:
   WAHA_API_URL: "https://your-waha-api-url"
-  WAHA_SESSION: "your-session-id"
+  WAHA_DEFAULT_SESSION: "your-session-id"
   SECRET_KEY: "your-secret-key" 

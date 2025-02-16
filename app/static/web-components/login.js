@@ -1,5 +1,10 @@
 class LoginForm extends HTMLElement {
   connectedCallback() {
+    if (window.pb.authStore.isValid) {
+      window.location.href = "/dashboard";
+      return;
+    }
+
     this.innerHTML = `
         <div class="flex min-h-[80vh] items-center justify-center">
             <div class="glass rounded-2xl p-8 w-full max-w-md">
@@ -63,21 +68,20 @@ class LoginForm extends HTMLElement {
 
       try {
         // Authenticate directly with PocketBase
-        const authData = await pb.collection('usersku').authWithPassword(
-          username,
-          password
-        );
+        const authData = await pb
+          .collection("usersku")
+          .authWithPassword(username, password);
 
         if (authData?.record) {
           // Get user role from tenant_roles
           const { role } = await authAPI.checkUserRole(authData.record.id);
-          
+
           // Store auth data
           localStorage.setItem("userRole", role);
           localStorage.setItem("isAdmin", role === "admin");
-          
+
           this.showNotification("Login successful! Redirecting...", "success");
-          
+
           // Redirect based on role
           setTimeout(() => {
             window.location.href = role === "admin" ? "/dashboard" : "/";

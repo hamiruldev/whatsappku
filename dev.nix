@@ -17,7 +17,7 @@
     FLASK_ENV = "development";
     SECRET_KEY = "your-secret-key-here";
     WAHA_API_URL = "https://my-app-352501285879.asia-southeast1.run.app";
-    WAHA_SESSION = "session";
+    WAHA_DEFAULT_SESSION = "session";
     PROJECT_ID = "my-app-352501285879";
     REGION = "asia-southeast1";
     POCKETBASE_URL = "https://hamirulhafizal.pockethost.io";

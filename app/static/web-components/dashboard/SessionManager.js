@@ -14,22 +14,51 @@ class SessionManager extends HTMLElement {
   }
 
   async connectedCallback() {
-    await this.loadSessions();
+    const response = await this.loadUserSession();
+
+    if (response.items.length > 0) {
+      await this.loadSessions(response);
+    }
+
     this.calculateNextSessionNumber();
     this.render();
     this.setupGrid();
     this.setupWebSocket();
   }
 
-  async loadSessions() {
+  async loadSessions(response) {
     try {
-      const response = await fetch("/api/sessions");
-      const data = await response.json();
-      this.sessions = replaceCusInMeId(data).details;
+      const res = await fetch("/api/sessions");
+      const data = await res.json();
+
+      // Extract session names from the first API response
+      const sessionNames = response.items.map((item) => item.name);
+
+      // Filter second API response based on session names
+      const filteredSessions = data.details.filter((session) =>
+        sessionNames.includes(session.name)
+      );
+
+      const reformatData = replaceCusInMeId({
+        details: filteredSessions,
+      }).details;
+
+      this.sessions = reformatData;
     } catch (error) {
       console.error("Error loading sessions:", error);
       this.sessions = [];
     }
+  }
+
+  async loadUserSession() {
+    const user = await authAPI.getCurrentUser();
+
+    const record = await pb.collection("whatsappku_sessions").getList(1, 50, {
+      sort: "-created",
+      filter: `userku="${user.id}"`,
+    });
+
+    return record;
   }
 
   calculateNextSessionNumber() {
@@ -53,7 +82,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch("/api/session/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName })
+        body: JSON.stringify({ name: sessionName }),
       });
 
       const result = await response.json();
@@ -77,7 +106,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch("/api/session/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName, start: true })
+        body: JSON.stringify({ name: sessionName, start: true }),
       });
 
       const result = await response.json();
@@ -98,7 +127,7 @@ class SessionManager extends HTMLElement {
       // checksessionexist first
       return await this.checkSession(sessionName).then(async (res) => {
         const response = await fetch(`/api/session/screenshot/${sessionName}`, {
-          method: "GET"
+          method: "GET",
         });
 
         const result = await response.json();
@@ -161,7 +190,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch("/api/session/restart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: session.name })
+        body: JSON.stringify({ name: session.name }),
       });
 
       const result = await response.json();
@@ -205,7 +234,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName })
+        body: JSON.stringify({ name: sessionName }),
       });
 
       const message = response.ok
@@ -213,7 +242,7 @@ class SessionManager extends HTMLElement {
         : `Failed to ${action} session ${sessionName}`;
 
       showNotification(message, response.ok ? "success" : "error");
-      await this.refreshSessions();
+        await this.refreshSessions();
     } catch (error) {
       showNotification(
         `Error ${action}ing session ${sessionName}: ${error.message}`,
@@ -261,17 +290,17 @@ class SessionManager extends HTMLElement {
                 cursor: pointer;
             }
         </style>
-    
-        <div class="glass rounded-2xl p-6 shadow-lg">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-white">Sessions</h2>
+
+            <div class="glass rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-white">Sessions</h2>
             <button id="newButtonSession" class="e-tbar-btn e-tbtn-txt e-control e-btn e-lib" type="button">
                 <span class="e-btn-icon e-plus e-icons e-icon-left"></span>
                 <span class="e-tbar-btn-text">New</span>
             </button>
+                </div>
+                <div id="sessionsGrid" class="mt-4"></div>
             </div>
-            <div id="sessionsGrid" class="mt-4"></div>
-        </div>
         <div id="managementDialog"></div>
         `;
   }
@@ -300,12 +329,12 @@ class SessionManager extends HTMLElement {
         allowAdding: true,
         allowEditing: false,
         allowDeleting: true,
-        mode: "Dialog"
+        mode: "Dialog",
       },
       width: "100%",
       columns: this.getGridColumns(),
       actionBegin: this.handleActionBegin.bind(this),
-      actionComplete: this.handleActionComplete.bind(this)
+      actionComplete: this.handleActionComplete.bind(this),
     });
 
     grid.appendTo(this.querySelector("#sessionsGrid"));
@@ -324,57 +353,57 @@ class SessionManager extends HTMLElement {
 
   getGridColumns() {
     return [
-      {
-        field: "name",
-        headerText: "Name",
-        width: 120,
-        textAlign: "Left",
-        allowEditing: false,
-        allowSorting: true
-      },
-      {
-        field: "me.id",
-        headerText: "Phone (ex: 60184644305)",
+        {
+          field: "name",
+          headerText: "Name",
+          width: 120,
+          textAlign: "Left",
+          allowEditing: false,
+        allowSorting: true,
+        },
+        {
+          field: "me.id",
+          headerText: "Phone (ex: 60184644305)",
         width: 170,
-        allowEditing: true,
-        allowSorting: true
-      },
-      {
-        field: "status",
-        headerText: "Status",
+          allowEditing: true,
+        allowSorting: true,
+        },
+        {
+          field: "status",
+          headerText: "Status",
         width: 150,
-        allowEditing: false,
+          allowEditing: false,
         visible: true,
         allowSorting: true,
-        allowFiltering: true
-      },
-      {
-        field: "server",
-        headerText: "Server",
-        width: 120,
-        allowEditing: false,
-        visible: false
-      },
-      {
-        field: "actions",
-        headerText: "Actions",
+        allowFiltering: true,
+        },
+        {
+          field: "server",
+          headerText: "Server",
+          width: 120,
+          allowEditing: false,
+        visible: false,
+        },
+        {
+          field: "actions",
+          headerText: "Actions",
         width: 120,
         template:
-          "<dialog-button session-name='${name}' session-status='${status}'></dialog-button>"
-      }
+          "<dialog-button session-name='${name}' session-status='${status}'></dialog-button>",
+      },
     ];
   }
 
   async handleActionBegin(args) {
-    if (args.requestType === "add" || args.requestType === "beginEdit") {
+        if (args.requestType === "add" || args.requestType === "beginEdit") {
       this.toggleGridColumnVisibility(false);
-    }
+        }
 
-    if (args.requestType === "delete") {
+        if (args.requestType === "delete") {
       await this.deleteSession(args.data[0].name);
-    }
+        }
 
-    if (args.requestType === "save" && args.action === "add") {
+        if (args.requestType === "save" && args.action === "add") {
       await this.createSession().then((res) => {
         this.newPhoneRegister = args.data.me.id;
         this.newSessionRegister = res.name;
@@ -395,14 +424,14 @@ class SessionManager extends HTMLElement {
       this.grid.refresh();
     }
 
-    if (args.requestType === "add") {
+        if (args.requestType === "add") {
       // args.dialog.header = "Add Session";
-      args.dialog.allowDragging = false;
-    }
+          args.dialog.allowDragging = false;
+        }
 
-    if (args.requestType === "beginEdit") {
+        if (args.requestType === "beginEdit") {
       // args.dialog.header = "Edit Session";
-      args.dialog.allowDragging = false;
+          args.dialog.allowDragging = false;
     }
   }
 
@@ -414,20 +443,20 @@ class SessionManager extends HTMLElement {
     }
 
     const button = event.target.closest("button");
-    if (!button) return;
+      if (!button) return;
 
-    const row = this.grid.getRowObjectFromUID(
+      const row = this.grid.getRowObjectFromUID(
       button.closest("tr")?.getAttribute("data-uid")
-    )?.data;
+      )?.data;
 
-    if (!row) return;
+      if (!row) return;
 
     if (button.classList.contains("start-btn")) {
-      await this.startSession(row.name);
-    } else if (button.classList.contains("restart-btn")) {
+        await this.startSession(row.name);
+      } else if (button.classList.contains("restart-btn")) {
       await this.restartSession(row);
-    } else if (button.classList.contains("stop-btn")) {
-      await this.stopSession(row.name);
+      } else if (button.classList.contains("stop-btn")) {
+        await this.stopSession(row.name);
     }
   }
 
@@ -594,19 +623,26 @@ class SessionManager extends HTMLElement {
       visible: false,
       close: () => {
         dialog.destroy();
-      }
+      },
     });
 
+    console.log("this.sessions--->", this.sessions);
+
+    // Find if any session has "SCAN_QR_CODE" status
+    const sessionStatus = this.sessions.find(
+      (session) => session.name === sessionName
+    );
+
     // Create tab
-    const tab = new ej.navigations.Tab({
+    var tab = new ej.navigations.Tab({
       items: [
         { header: { text: "Screenshot" }, content: ".qr-container" },
         { header: { text: "Calendar" }, content: ".calendar-container" },
         { header: { text: "Schedules" }, content: ".schedules-container" },
         {
           header: { text: "Test Message" },
-          content: ".test-message-container"
-        }
+          content: ".test-message-container",
+        },
       ],
       selecting: (args) => {
         if (args.isSwiped) {
@@ -616,10 +652,12 @@ class SessionManager extends HTMLElement {
       },
       selected: (args) => {
         this.handleTabChange(args, sessionName);
-      }
+      },
     });
 
     dialog.appendTo("#managementDialog");
+
+    debugger;
 
     if (isMobile()) {
       dialog.show();
@@ -632,6 +670,17 @@ class SessionManager extends HTMLElement {
 
     // Add event listeners
     dialog && this.setupManageDialogEvents(dialog, sessionName);
+
+    // Disable "Calendar" and "Schedules" tabs if any session is in "SCAN_QR_CODE"
+    if (sessionStatus.status != "WORKING") {
+      tab.hideTab(1, true);
+      tab.hideTab(2, true);
+      tab.hideTab(3, true);
+    } else {
+      tab.hideTab(1, false);
+      tab.hideTab(2, false);
+      tab.hideTab(3, false);
+    }
   }
 
   handleTabChange(args, sessionName) {
@@ -658,7 +707,7 @@ class SessionManager extends HTMLElement {
       const response = await fetch(`/api/session/auth/qr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName })
+        body: JSON.stringify({ name: sessionName }),
       });
       const data = await response.json();
       if (data.qrCode) {
@@ -687,16 +736,6 @@ class SessionManager extends HTMLElement {
 
   setupManageDialogEvents(dialog, sessionName) {
     // QR Code refresh
-    // document.querySelector(".refresh-qr").addEventListener("click", () => {
-    //   this.loadQRCode(sessionName);
-    // });
-
-    // Screenshot refresh
-    // document
-    //   .querySelector(".refresh-screenshot")
-    //   .addEventListener("click", () => {
-    //     this.loadScreenshot(sessionName);
-    //   });
 
     // Send test message
     document.querySelector(".send-test").addEventListener("click", async () => {
@@ -714,8 +753,8 @@ class SessionManager extends HTMLElement {
         body: JSON.stringify({
           session: sessionName,
           phone,
-          message
-        })
+          message,
+        }),
       });
       const result = await response.json();
       console.log("result", result);
@@ -793,7 +832,7 @@ class DialogButton extends HTMLElement {
       this.dispatchEvent(
         new CustomEvent("dialog-click", {
           bubbles: true,
-          detail: { sessionName: this.sessionName }
+          detail: { sessionName: this.sessionName },
         })
       );
     });

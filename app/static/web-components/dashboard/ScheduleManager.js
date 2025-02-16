@@ -76,7 +76,7 @@ class ScheduleManager extends HTMLElement {
         phone: msg.phone,
         target: msg.target || "chat",
         type: msg.type || "text",
-        messageText: msg.message
+        messageText: msg.message,
       };
     });
   }
@@ -114,8 +114,8 @@ class ScheduleManager extends HTMLElement {
           startTime: { name: "StartTime" },
           endTime: { name: "EndTime" },
           description: { name: "Description" },
-          recurrenceRule: { name: "RecurrenceRule" }
-        }
+          recurrenceRule: { name: "RecurrenceRule" },
+        },
       },
       views: ["Day", "Week", "Month"],
       currentView: "Month",
@@ -124,7 +124,7 @@ class ScheduleManager extends HTMLElement {
       popupOpen: (args) => this.handlePopupOpen(args),
       actionBegin: (args) => this.handleActionBegin(args),
       actionComplete: (args) => this.handleActionComplete(args),
-      eventRendered: (args) => this.handleEventRendered(args)
+      eventRendered: (args) => this.handleEventRendered(args),
     });
 
     this.scheduleObj.appendTo(this.querySelector("#schedule"));
@@ -157,14 +157,14 @@ class ScheduleManager extends HTMLElement {
       buttons: [
         {
           click: () => this.handleDialogSave(dialog, eventData),
-          buttonModel: { content: "Save", isPrimary: true }
+          buttonModel: { content: "Save", isPrimary: true },
         },
         {
           click: () => dialog.hide(),
-          buttonModel: { content: "Cancel" }
-        }
+          buttonModel: { content: "Cancel" },
+        },
       ],
-      close: () => dialog.destroy()
+      close: () => dialog.destroy(),
     });
 
     dialog.appendTo(this.querySelector("#messageDialog"));
@@ -178,12 +178,18 @@ class ScheduleManager extends HTMLElement {
     return `
 
         <div class="schedule-dialog-content">
+
+           <div class="input-group mb-4">
+                <label>Platform</label>
+                <input type="text" id="platform" class="e-input">
+            </div>
+
             <div class="input-group mb-4">
                 <label>Target</label>
                 <input type="text" id="target" class="e-input">
             </div>
             
-            <div class="input-group mb-4">
+            <div class="input-group mb-4 phone-number">
                 <label>Phone Number</label>
                 <input type="text" id="phone" class="e-input" value="60184644305">
             </div>
@@ -215,16 +221,53 @@ class ScheduleManager extends HTMLElement {
   }
 
   initializeFormComponents(data) {
+    // Platform dropdown
+    new ej.dropdowns.DropDownList({
+      dataSource: [
+        {
+          value: "whatsapp",
+          text: "Whatsapp",
+          enabled: true,
+        },
+        {
+          value: "tiktok",
+          text: "Tiktok (Coming Soon)",
+          enabled: false,
+        },
+        {
+          value: "instagram",
+          text: "Instagram (Coming Soon)",
+          enabled: false,
+        },
+        {
+          value: "telegram",
+          text: "Telegram (Coming Soon)",
+          enabled: false,
+        },
+      ],
+      fields: { text: "text", value: "value", enabled: "enabled" },
+      select: (args) => {
+        if (args.value !== "whatsapp") {
+          args.cancel = true;
+        }
+      },
+      value: data.platform || "whatsapp",
+      placeholder: "Select platform",
+    }).appendTo("#platform");
+
     // Target dropdown
     new ej.dropdowns.DropDownList({
-      dataSource: ["story", "chat"],
-      value: data.target || "chat",
-      placeholder: "Select target",
+      dataSource: ["Status", "Chat"],
+      value: data.target || "Chat",
+      placeholder: "Select Target",
       change: (args) => {
         console.log("args--->", args);
-        if (args.value === "story") {
+        if (args.value === "Status") {
+          document.querySelector(".phone-number").style.display = "none";
+        } else {
+          document.querySelector(".phone-number").style.display = "block";
         }
-      }
+      },
     }).appendTo("#target");
 
     // Phone autocomplete
@@ -232,7 +275,7 @@ class ScheduleManager extends HTMLElement {
       dataSource: window.allContacts,
       fields: { text: "number", value: "number" },
       value: data.phone,
-      placeholder: "Select contact"
+      placeholder: "Select contact",
     }).appendTo("#phone");
 
     // Type dropdown
@@ -251,7 +294,7 @@ class ScheduleManager extends HTMLElement {
           const editBtn = document.querySelector("#imageEditorContainer");
           if (editBtn) editBtn.remove();
         }
-      }
+      },
     }).appendTo("#type");
 
     const checkDateTime = getValidStartTime(data.StartTime);
@@ -262,12 +305,12 @@ class ScheduleManager extends HTMLElement {
     new ej.calendars.DateTimePicker({
       value: checkDateTime || new Date(),
       format: "dd/MM/yyyy HH:mm",
-      min: new Date()
+      min: new Date(),
     }).appendTo("#scheduleTime");
 
     // Recurrence editor
     new ej.schedule.RecurrenceEditor({
-      value: data.RecurrenceRule || ""
+      value: data.RecurrenceRule || "",
     }).appendTo("#recurrenceEditor");
   }
 
@@ -291,7 +334,7 @@ class ScheduleManager extends HTMLElement {
       hour: dateObj.getHours(),
       minute: dateObj.getMinutes(),
       start_date: dateObj.toISOString(), // Include the full date
-      recurrence: recurrenceRule // Include recurrence pattern
+      recurrence: recurrenceRule, // Include recurrence pattern
     };
 
     try {
@@ -301,8 +344,8 @@ class ScheduleManager extends HTMLElement {
         body: JSON.stringify({
           id: originalData.Id,
           session: this.sessionName,
-          ...formData
-        })
+          ...formData,
+        }),
       });
 
       const result = await response.json();
@@ -322,7 +365,7 @@ class ScheduleManager extends HTMLElement {
           phone: formData.phone,
           target: formData.target,
           type: formData.type,
-          messageText: formData.message
+          messageText: formData.message,
         };
 
         // Update the schedule immediately
@@ -366,7 +409,7 @@ class ScheduleManager extends HTMLElement {
       const response = await fetch("/api/scheduled-messages", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id })
+        body: JSON.stringify({ id }),
       });
 
       const result = await response.json();

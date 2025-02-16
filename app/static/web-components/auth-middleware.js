@@ -5,32 +5,37 @@ class AuthMiddleware extends HTMLElement {
   }
 
   async checkAuth() {
-    const publicPaths = ['/login', '/register', '/forgot-password', '/verify-email'];
-    
+    const publicPaths = [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/verify-email",
+    ];
+
     if (publicPaths.includes(window.location.pathname)) {
       // Check if user is already authenticated
       if (await authAPI.isValidSession()) {
         const user = await authAPI.getCurrentUser();
-        window.location.href = user.isAdmin ? '/dashboard' : '/';
+        window.location.href = user.isAdmin ? "/dashboard" : "/";
       }
       return;
     }
 
     // Check authentication for protected routes
-    if (!await authAPI.isValidSession()) {
-      window.location.href = '/login';
+    if (!(await authAPI.isValidSession())) {
+      window.location.href = "/login";
       return;
     }
 
     // Check authorization based on user role
     const user = await authAPI.getCurrentUser();
-    
+
     // Admin-only routes
-    const adminRoutes = ['/dashboard/users', '/dashboard/settings'];
+    const adminRoutes = ["/dashboard/users", "/dashboard/settings"];
     if (adminRoutes.includes(window.location.pathname) && !user.isAdmin) {
-      window.location.href = '/';
+      window.location.href = "/";
     }
   }
 }
 
-customElements.define('auth-middleware', AuthMiddleware); 
+customElements.define("auth-middleware", AuthMiddleware);

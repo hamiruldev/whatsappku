@@ -1,11 +1,7 @@
-// Remove the import since we're using CDN
-// import { pb } from "../lib/pocketbase";
-// import { superuserClient } from "../lib/superuserClient";
-
 // Helper function for PocketBase list queries
 const fetchFirstItem = async (collection, filter) => {
   try {
-    return await pb.collection(collection).getFirstListItem(filter);
+    return await window.pb.collection(collection).getFirstListItem(filter);
   } catch (error) {
     if (error.status === 404) return null;
     throw error;
@@ -13,13 +9,13 @@ const fetchFirstItem = async (collection, filter) => {
 };
 
 // User API calls
-export const userAPI = {
+const userAPI = {
   register: (userData) => pb.collection("usersku").create(userData),
 
   validateField: async (field, value) => {
     try {
-      const result = await pb.collection("usersku").getList(1, 1, {
-        filter: `${field} = "${value}"`
+      const result = await window.pb.collection("usersku").getList(1, 1, {
+        filter: `${field} = "${value}"`,
       });
       return result.items.length === 0;
     } catch (error) {
@@ -28,17 +24,17 @@ export const userAPI = {
   },
 
   requestPasswordReset: (email) =>
-    pb.collection("usersku").requestPasswordReset(email),
+    window.pb.collection("usersku").requestPasswordReset(email),
 
-  getProfile: (userId) => pb.collection("usersku").getOne(userId),
+  getProfile: (userId) => window.pb.collection("usersku").getOne(userId),
 
   updateProfile: (userId, formData) =>
-    pb.collection("usersku").update(userId, formData),
+    window.pb.collection("usersku").update(userId, formData),
 
   getAllUsers: (page = 1, perPage = 50, options = {}) =>
-    pb.collection("usersku").getList(page, perPage, {
+    window.pb.collection("usersku").getList(page, perPage, {
       sort: "username",
-      ...options
+      ...options,
     }),
 
   validateReferralCode: async (code) =>
@@ -48,28 +44,32 @@ export const userAPI = {
 
   getUserDetails: async (userId) => {
     if (!userId) return null;
-    return pb.collection("usersku").getOne(userId, {
-      fields: "id,username,name,email,avatar_url"
+    return window.pb.collection("usersku").getOne(userId, {
+      fields: "id,username,name,email,avatar_url",
     });
   },
 
   getUsername: async (userId) => {
     const record = await userAPI.getProfile(userId);
     return record?.name || record?.username || null;
-  }
+  },
 };
 
 // Authentication API
-export const authAPI = {
+const authAPI = {
   checkUserRole: async (userId) => {
     try {
-      const roleRecord = await pb.collection("tenant_roles").getFirstListItem(`user="${userId}"`);
+      const roleRecord = await window.pb
+        .collection("tenant_roles")
+        .getFirstListItem(`user="${userId}"`);
       if (!roleRecord) return { role: "guest", tenantId: null };
 
-      const roleDetails = await pb.collection("roles").getOne(roleRecord.role);
+      const roleDetails = await window.pb
+        .collection("roles")
+        .getOne(roleRecord.role);
       return {
         role: roleDetails?.name || "guest",
-        tenantId: roleRecord.tenant
+        tenantId: roleRecord.tenant,
       };
     } catch (error) {
       console.error("Error checking user role:", error);
@@ -77,10 +77,10 @@ export const authAPI = {
     }
   },
 
-  isValidSession: () => pb.authStore.isValid,
+  isValidSession: () => window.pb.authStore.isValid,
 
   logout: () => {
-    pb.authStore.clear();
+    window.pb.authStore.clear();
     localStorage.removeItem("isAdmin");
     localStorage.removeItem("userRole");
     localStorage.removeItem("tenantId");
@@ -88,16 +88,16 @@ export const authAPI = {
   },
 
   getCurrentUser: () => {
-    if (!pb.authStore.isValid) return null;
-    return pb.authStore.model;
-  }
+    if (!window.pb.authStore.isValid) return null;
+    return window.pb.authStore.model;
+  },
 };
 
 // List of Values (LOV) API
-export const LOV = {
+const LOV = {
   getUsers: (page = 1, perPage = 50, options = {}) =>
-    pb.collection("userku_lov").getFullList(page, perPage, {
+    window.pb.collection("userku_lov").getFullList(page, perPage, {
       sort: "-created",
-      ...options
-    })
+      ...options,
+    }),
 };

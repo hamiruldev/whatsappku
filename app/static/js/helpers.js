@@ -40,7 +40,7 @@ function updateTimeToDate(arr) {
 
     return {
       ...item,
-      time: new Date(year, month - 1, day, hour, minute) // Create new Date object
+      time: new Date(year, month - 1, day, hour, minute), // Create new Date object
     };
   });
 }

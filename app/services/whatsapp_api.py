@@ -20,7 +20,7 @@ class WhatsAppAPI:
     
     @staticmethod
     def _get_session():
-        return current_app.config['WAHA_SESSION']
+        return current_app.config['WAHA_DEFAULT_SESSION']
     
     @classmethod
     def send_text(cls, session, chat_id, text, reply_to=None, link_preview=True):

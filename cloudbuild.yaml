@@ -30,7 +30,7 @@ steps:
       - '--max-instances'
       - '10'
       - '--set-env-vars'
-      - 'FLASK_ENV=production,PROJECT_ID=${PROJECT_ID},REGION=${_REGION},WAHA_API_URL=${_WAHA_API_URL},WAHA_SESSION=${_WAHA_SESSION},SECRET_KEY=${_SECRET_KEY},POCKETBASE_URL=${_POCKETBASE_URL},PUBLIC_GOLD_URL=${_PUBLIC_GOLD_URL}'
+      - 'FLASK_ENV=production,PROJECT_ID=${PROJECT_ID},REGION=${_REGION},WAHA_API_URL=${_WAHA_API_URL},WAHA_DEFAULT_SESSION=${_WAHA_DEFAULT_SESSION},SECRET_KEY=${_SECRET_KEY},POCKETBASE_URL=${_POCKETBASE_URL},PUBLIC_GOLD_URL=${_PUBLIC_GOLD_URL}'
 
 images:
   - 'gcr.io/$PROJECT_ID/whatsapp-crm'
@@ -38,6 +38,6 @@ images:
 substitutions:
   _REGION: asia-southeast1
   _WAHA_API_URL: https://my-app-352501285879.asia-southeast1.run.app
-  _WAHA_SESSION: session
+  _WAHA_DEFAULT_SESSION: session
   _POCKETBASE_URL: https://hamirulhafizal.pockethost.io
   _PUBLIC_GOLD_URL: https://publicgold.com.my/ 

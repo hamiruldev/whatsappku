@@ -14,7 +14,7 @@ class Config:
     
     # WhatsApp API Configuration
     WAHA_API_URL = os.getenv('WAHA_API_URL')
-    WAHA_SESSION = os.getenv('WAHA_SESSION')
+    WAHA_DEFAULT_SESSION = os.getenv('WAHA_DEFAULT_SESSION')
     
     # Google Cloud Configuration
     PROJECT_ID = os.getenv('PROJECT_ID')

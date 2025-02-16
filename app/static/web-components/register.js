@@ -1,5 +1,10 @@
 class RegisterForm extends HTMLElement {
   connectedCallback() {
+    if (window.pb.authStore.isValid) {
+      window.location.href = "/dashboard";
+      return;
+    }
+
     this.innerHTML = `
       <div class="flex min-h-[80vh] items-center justify-center">
         <div class="glass rounded-2xl p-8 w-full max-w-md">
@@ -110,7 +115,7 @@ class RegisterForm extends HTMLElement {
     const form = this.querySelector("#registerForm");
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      
+
       const formData = {
         username: form.username.value,
         email: form.email.value,
@@ -122,31 +127,27 @@ class RegisterForm extends HTMLElement {
         phone: form.phone.value,
         bio: JSON.stringify({}),
         bank_details: JSON.stringify({}),
-        kodku: this.generateKodku(form.username.value)
+        kodku: this.generateKodku(form.username.value),
       };
 
       try {
         // Create user directly with PocketBase
-        const record = await pb.collection('usersku').create(formData);
-        
+        const record = await pb.collection("usersku").create(formData);
+
         // Request email verification
-        await pb.collection('usersku').requestVerification(formData.email);
-        
+        await pb.collection("usersku").requestVerification(formData.email);
+
         this.showNotification(
           "Registration successful! Please check your email for verification.",
           "success"
         );
-        
+
         setTimeout(() => {
           window.location.href = "/login";
         }, 1500);
-
       } catch (error) {
         console.error("Registration error:", error);
-        this.showNotification(
-          error.message || "Registration failed",
-          "error"
-        );
+        this.showNotification(error.message || "Registration failed", "error");
       }
     });
   }
