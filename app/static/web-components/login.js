@@ -61,29 +61,34 @@ class LoginForm extends HTMLElement {
       const username = form.username.value;
       const password = form.password.value;
 
-      // Handle login logic (API call)
       try {
-        const response = await fetch("/api/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ username, password }),
-        });
+        // Authenticate directly with PocketBase
+        const authData = await pb.collection('usersku').authWithPassword(
+          username,
+          password
+        );
 
-        const data = await response.json();
-        if (response.ok) {
-          // Show success message with nice animation
-          this.showNotification("Success! Redirecting...", "success");
+        if (authData?.record) {
+          // Get user role from tenant_roles
+          const { role } = await authAPI.checkUserRole(authData.record.id);
+          
+          // Store auth data
+          localStorage.setItem("userRole", role);
+          localStorage.setItem("isAdmin", role === "admin");
+          
+          this.showNotification("Login successful! Redirecting...", "success");
+          
+          // Redirect based on role
           setTimeout(() => {
-            window.location.href = "/dashboard";
+            window.location.href = role === "admin" ? "/dashboard" : "/";
           }, 1500);
-        } else {
-          this.showNotification(data.message || "Login failed!", "error");
         }
       } catch (error) {
-        console.error("Error logging in:", error);
-        this.showNotification("An error occurred while logging in.", "error");
+        console.error("Login error:", error);
+        this.showNotification(
+          error.message || "Invalid username or password",
+          "error"
+        );
       }
     });
   }

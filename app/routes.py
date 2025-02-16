@@ -1,9 +1,10 @@
-from flask import current_app, render_template, request, jsonify
+from flask import current_app, render_template, request, jsonify, make_response
 from app.controllers import scheduler, whatsapp
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 from werkzeug.utils import secure_filename
+import json
 
 from app.utils.media import allowed_file, get_media_tags, get_media_type, save_media_tags
 
@@ -31,17 +32,6 @@ def register_routes(app):
     @app.route("/dashboard")
     def dashboard():
         return render_template("dashboard.html")
-
-    @app.route("/api/login", methods=["POST"])
-    def api_login():
-        data = request.json
-        username = data.get("username")
-        password = data.get("password")
-
-        # Simulate authentication logic (replace with real logic)
-        if username == "admin" and password == "password123":
-            return jsonify({"message": "Login successful!"}), 200
-        return jsonify({"message": "Invalid username or password."}), 401
 
     @app.route('/api/contacts', methods=['GET'])
     def fetch_contacts():
@@ -487,4 +477,35 @@ def register_routes(app):
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    # Add authentication middleware for protected routes
+    @app.before_request
+    def auth_middleware():
+        # List of routes that don't require authentication
+        public_routes = [
+            "/api/login",
+            "/api/register",
+            "/login",
+            "/register",
+            "/forgot-password",
+            "/verify-email",
+            "/static/",
+            "/"
+        ]
+
+        # Skip middleware for public routes
+        for route in public_routes:
+            if request.path.startswith(route):
+                return None
+
+        # Check for auth token in headers
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            return jsonify({
+                "success": False,
+                "message": "Authentication required"
+            }), 401
+
+        # Token validation is handled by PocketBase on the frontend
+        return None
         

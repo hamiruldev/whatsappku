@@ -1,6 +1,6 @@
-// Import PocketBase instance
-import { pb } from "../lib/pocketbase";
-import { superuserClient } from "../lib/superuserClient";
+// Remove the import since we're using CDN
+// import { pb } from "../lib/pocketbase";
+// import { superuserClient } from "../lib/superuserClient";
 
 // Helper function for PocketBase list queries
 const fetchFirstItem = async (collection, filter) => {
@@ -63,83 +63,33 @@ export const userAPI = {
 export const authAPI = {
   checkUserRole: async (userId) => {
     try {
-      const roleRecord = await fetchFirstItem(
-        "tenant_roles",
-        `user="${userId}"`
-      );
-      const roleDetails = roleRecord
-        ? await fetchFirstItem("roles", `id="${roleRecord.role}"`)
-        : null;
+      const roleRecord = await pb.collection("tenant_roles").getFirstListItem(`user="${userId}"`);
+      if (!roleRecord) return { role: "guest", tenantId: null };
 
+      const roleDetails = await pb.collection("roles").getOne(roleRecord.role);
       return {
         role: roleDetails?.name || "guest",
-        tenantId: "rb0s8fazmuf44ac"
+        tenantId: roleRecord.tenant
       };
     } catch (error) {
       console.error("Error checking user role:", error);
-      return { role: "guest", tenantId: "rb0s8fazmuf44ac" };
+      return { role: "guest", tenantId: null };
     }
   },
 
-  login: async (email, password) => {
-    try {
-      const authData = await pb
-        .collection("usersku")
-        .authWithPassword(email, password);
-      if (authData?.record) {
-        const { role, tenantId } = await authAPI.checkUserRole(
-          authData.record.id
-        );
-
-        localStorage.setItem("userRole", role);
-        localStorage.setItem("isAdmin", role === "admin");
-
-        window.location.href = role === "admin" ? "/dashboard" : "/bilikku";
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
-    }
-  },
-
-  register: async (email, password, name, username) => {
-    const userData = {
-      email,
-      password,
-      passwordConfirm: password,
-      full_name: name,
-      username
-    };
-    await userAPI.register(userData);
-    return authAPI.login(email, password);
-  },
+  isValidSession: () => pb.authStore.isValid,
 
   logout: () => {
     pb.authStore.clear();
-    superuserClient.authStore.clear();
     localStorage.removeItem("isAdmin");
     localStorage.removeItem("userRole");
-    document.cookie = "pb_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+    localStorage.removeItem("tenantId");
+    window.location.href = "/login";
   },
 
-  isValidSession: () =>
-    pb.authStore.isValid || superuserClient.authStore.isValid,
-
-  getCurrentUser: async () => {
-    if (pb.authStore.isValid && pb.authStore.model) {
-      const authModel = pb.authStore.model;
-      const { role, tenantId } = await authAPI.checkUserRole(authModel.id);
-      return {
-        id: authModel.id,
-        email: authModel.email,
-        role,
-        username: authModel.username,
-        isAdmin: role === "admin",
-        isSuperAdmin: false,
-        tenantId
-      };
-    }
-    return null;
+  getCurrentUser: () => {
+    if (!pb.authStore.isValid) return null;
+    return pb.authStore.model;
   }
 };
 

@@ -90,10 +90,20 @@
             margin-left: 8px;
         }
     </style>
+
+    <!-- Add PocketBase CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.8.0-rc1/pocketbase.umd.min.js"></script>
+    
+    <!-- Initialize PocketBase -->
+    <script>
+        // Initialize PocketBase instance
+        const pb = new PocketBase('https://hamirulhafizal.pockethost.io');
+    </script>
 </head>
 
 <body
     class="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-blue-700 animate-gradient transition-colors duration-200">
+    <auth-middleware></auth-middleware>
     <div class="min-h-screen flex flex-col">
         <header class="glass fixed w-full top-0 z-50">
             <nav class="container mx-auto px-6 py-4">
@@ -150,6 +160,7 @@
         dialog.appendTo('#SharedDialog');
     </script>
 
+    <script src="/static/web-components/auth-middleware.js"></script>
     {% block scripts %}{% endblock %}
 </body>
 
