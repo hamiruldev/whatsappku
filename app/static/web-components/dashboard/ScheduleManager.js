@@ -76,7 +76,7 @@ class ScheduleManager extends HTMLElement {
         phone: msg.phone,
         target: msg.target || "chat",
         type: msg.type || "text",
-        messageText: msg.message,
+        messageText: msg.message
       };
     });
   }
@@ -114,8 +114,8 @@ class ScheduleManager extends HTMLElement {
           startTime: { name: "StartTime" },
           endTime: { name: "EndTime" },
           description: { name: "Description" },
-          recurrenceRule: { name: "RecurrenceRule" },
-        },
+          recurrenceRule: { name: "RecurrenceRule" }
+        }
       },
       views: ["Day", "Week", "Month"],
       currentView: "Month",
@@ -124,14 +124,14 @@ class ScheduleManager extends HTMLElement {
       popupOpen: (args) => this.handlePopupOpen(args),
       actionBegin: (args) => this.handleActionBegin(args),
       actionComplete: (args) => this.handleActionComplete(args),
-      eventRendered: (args) => this.handleEventRendered(args),
+      eventRendered: (args) => this.handleEventRendered(args)
     });
 
     this.scheduleObj.appendTo(this.querySelector("#schedule"));
   }
 
   handleActionComplete(args) {
-    console.log("args handleActionComplete--->", args);
+    //console.log("args handleActionComplete--->", args);
   }
 
   async handlePopupOpen(args) {
@@ -157,14 +157,14 @@ class ScheduleManager extends HTMLElement {
       buttons: [
         {
           click: () => this.handleDialogSave(dialog, eventData),
-          buttonModel: { content: "Save", isPrimary: true },
+          buttonModel: { content: "Save", isPrimary: true }
         },
         {
           click: () => dialog.hide(),
-          buttonModel: { content: "Cancel" },
-        },
+          buttonModel: { content: "Cancel" }
+        }
       ],
-      close: () => dialog.destroy(),
+      close: () => dialog.destroy()
     });
 
     dialog.appendTo(this.querySelector("#messageDialog"));
@@ -225,34 +225,35 @@ class ScheduleManager extends HTMLElement {
     new ej.dropdowns.DropDownList({
       dataSource: [
         {
-          value: "whatsapp",
+          value: "Whatsapp",
           text: "Whatsapp",
-          enabled: true,
+          enabled: true
         },
         {
-          value: "tiktok",
+          value: "Tiktok",
           text: "Tiktok (Coming Soon)",
-          enabled: false,
+          enabled: false
         },
         {
-          value: "instagram",
+          value: "Instagram",
           text: "Instagram (Coming Soon)",
-          enabled: false,
+          enabled: false
         },
         {
-          value: "telegram",
+          value: "Telegram",
           text: "Telegram (Coming Soon)",
-          enabled: false,
-        },
+          enabled: false
+        }
       ],
+      value: data.platform || "Whatsapp",
       fields: { text: "text", value: "value", enabled: "enabled" },
       select: (args) => {
-        if (args.value !== "whatsapp") {
+        if (args.value !== "Whatsapp") {
           args.cancel = true;
         }
       },
-      value: data.platform || "whatsapp",
-      placeholder: "Select platform",
+      value: data.platform || "Whatsapp",
+      placeholder: "Select platform"
     }).appendTo("#platform");
 
     // Target dropdown
@@ -267,7 +268,7 @@ class ScheduleManager extends HTMLElement {
         } else {
           document.querySelector(".phone-number").style.display = "block";
         }
-      },
+      }
     }).appendTo("#target");
 
     // Phone autocomplete
@@ -275,7 +276,7 @@ class ScheduleManager extends HTMLElement {
       dataSource: window.allContacts,
       fields: { text: "number", value: "number" },
       value: data.phone,
-      placeholder: "Select contact",
+      placeholder: "Select contact"
     }).appendTo("#phone");
 
     // Type dropdown
@@ -284,9 +285,7 @@ class ScheduleManager extends HTMLElement {
       value: data.type || "text",
       placeholder: "Select type",
       change: (args) => {
-        console.log("args--->", args);
         if (args.value === "image") {
-          // Add edit button next to type dropdown
           this.showImageEditorDialog();
         } else {
           console.log("remove image editor container");
@@ -294,98 +293,153 @@ class ScheduleManager extends HTMLElement {
           const editBtn = document.querySelector("#imageEditorContainer");
           if (editBtn) editBtn.remove();
         }
-      },
+      }
     }).appendTo("#type");
 
     const checkDateTime = getValidStartTime(data.StartTime);
-
-    console.log("checkDateTime--->", checkDateTime);
 
     // DateTime picker
     new ej.calendars.DateTimePicker({
       value: checkDateTime || new Date(),
       format: "dd/MM/yyyy HH:mm",
-      min: new Date(),
+      min: new Date()
     }).appendTo("#scheduleTime");
 
     // Recurrence editor
     new ej.schedule.RecurrenceEditor({
-      value: data.RecurrenceRule || "",
+      value: data.RecurrenceRule || ""
     }).appendTo("#recurrenceEditor");
   }
 
   async handleDialogSave(dialog, originalData) {
-    // Get the datetime value
-    const selectedTime =
-      document.querySelector("#scheduleTime").ej2_instances[0].value;
+    try {
+      // Extract form data
+      var formData = this.getFormData();
+
+      debugger;
+
+      console.log("originalData--->", originalData);
+
+      // Send request to create scheduled message
+      const result1 = await this.createScheduledMessage(formData);
+
+      // Save data to backend
+      const result2 = await this.createCronJob(originalData, formData);
+
+      formData.schedule_id = result1.id;
+      formData.job_id = result2.id;
+
+      if (result2.status === "success") {
+        await schedulerAPI.updateScheduledMessage(formData.schedule_id, formData);
+        this.saveSchedule(formData.schedule_id, formData);
+
+        showNotification("Schedule saved successfully", "success");
+        dialog.hide();
+
+        // Refresh schedules after a short delay
+        setTimeout(() => this.loadSchedules(), 500);
+      } else {
+        throw new Error(result2.message || "Failed to save schedule");
+      }
+    } catch (error) {
+      showNotification(`Error saving schedule: ${error.message}`, "error");
+    }
+  }
+
+  /**
+   * Extracts form data from the UI
+   */
+  getFormData() {
+    const getValue = (selector) =>
+      document.querySelector(selector)?.ej2_instances?.[0]?.value;
+    const selectedTime = getValue("#scheduleTime");
+    const recurrenceRule = getValue("#recurrenceEditor") || "none";
     const dateObj = new Date(selectedTime);
+    const sessionId =
+      document.querySelector("#managementDialog").ej2_instances[0]
+        .selectedSessionId;
 
-    // Get recurrence pattern
-    const recurrenceEditor =
-      document.querySelector("#recurrenceEditor").ej2_instances[0];
-    const recurrenceRule = recurrenceEditor.value;
-
-    const formData = {
-      target: document.querySelector("#target").ej2_instances[0].value,
+    return {
+      job_id: "none",
+      platform: getValue("#platform"),
+      target: getValue("#target"),
       phone: document.querySelector("#phone").value,
       message: document.querySelector("#message").value,
-      type: document.querySelector("#type").ej2_instances[0].value,
+      type: getValue("#type"),
       time: selectedTime, // Full datetime for display
       hour: dateObj.getHours(),
       minute: dateObj.getMinutes(),
       start_date: dateObj.toISOString(), // Include the full date
       recurrence: recurrenceRule, // Include recurrence pattern
+      session: sessionId,
+      status: "pending"
+    };
+  }
+
+  /**
+   * Sends a request to create a scheduled message in the scheduler API
+   */
+  async createScheduledMessage(formData) {
+    try {
+      return await schedulerAPI.createScheduledMessage(formData);
+    } catch (error) {
+      console.error("Scheduler API Error:", error);
+    }
+  }
+
+  /**
+   * Saves the scheduled message to the backend
+   */
+  async createCronJob(originalData, formData) {
+    const sessionName =
+      document.querySelector("#managementDialog").ej2_instances[0]
+        .selectedSessionName;
+
+    const response = await fetch("/api/scheduled-messages", {
+      method: originalData.Id ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: originalData.Id,
+        session_name: sessionName,
+        ...formData
+      })
+    });
+
+    return response.json();
+  }
+
+  /**
+   * Updates or adds the event to the scheduler
+   */
+  saveSchedule(eventId, formData) {
+    const dateObj = new Date(formData.time);
+
+    const newEventData = {
+      Id: eventId,
+      Subject: `Message to ${formData.phone}`,
+      StartTime: dateObj,
+      EndTime: new Date(dateObj.getTime() + 30 * 60000),
+      IsAllDay: false,
+      Status: "Active",
+      Priority: "High",
+      Description: formData.message,
+      RecurrenceRule: "",
+      phone: formData.phone,
+      target: formData.target,
+      type: formData.type,
+      messageText: formData.message,
+      job_id: formData.job_id,
+      schedule_id: formData.schedule_id
     };
 
-    try {
-      const response = await fetch("/api/scheduled-messages", {
-        method: originalData.Id ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: originalData.Id,
-          session: this.sessionName,
-          ...formData,
-        }),
-      });
+    console.log("newEventData--->", newEventData);
 
-      const result = await response.json();
-
-      if (result.status === "success") {
-        // Create new event data
-        const newEventData = {
-          Id: result.id || originalData.Id,
-          Subject: `Message to ${formData.phone}`,
-          StartTime: dateObj,
-          EndTime: new Date(dateObj.getTime() + 30 * 60000),
-          IsAllDay: false,
-          Status: "Active",
-          Priority: "High",
-          Description: formData.message,
-          RecurrenceRule: formData.recurrence,
-          phone: formData.phone,
-          target: formData.target,
-          type: formData.type,
-          messageText: formData.message,
-        };
-
-        // Update the schedule immediately
-        if (originalData.Id) {
-          this.scheduleObj.saveEvent(newEventData);
-        } else {
-          this.scheduleObj.addEvent(newEventData);
-        }
-
-        showNotification("Schedule saved successfully", "success");
-        dialog.hide();
-
-        // Refresh the full schedule after a short delay
-        setTimeout(() => this.loadSchedules(), 500);
-      } else {
-        throw new Error(result.message || "Failed to save schedule");
-      }
-    } catch (error) {
-      showNotification(`Error saving schedule: ${error.message}`, "error");
-    }
+    // if (eventId) {
+    //   this.scheduleObj.saveEvent(newEventData);
+    // } else {
+    //   this.scheduleObj.addEvent(newEventData);
+    // }
+    this.scheduleObj.addEvent(newEventData);
   }
 
   handleEventRendered(args) {
@@ -409,7 +463,7 @@ class ScheduleManager extends HTMLElement {
       const response = await fetch("/api/scheduled-messages", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id })
       });
 
       const result = await response.json();

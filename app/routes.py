@@ -78,7 +78,7 @@ def register_routes(app):
             data = request.json
             try:
                 job_id = add_scheduled_message(
-                    session_name=data.get('session'),
+                    session_name=data.get('session_name'),
                     hour=data.get('hour'),
                     minute=data.get('minute'),
                     phone=data.get('phone'),

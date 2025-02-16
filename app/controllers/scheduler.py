@@ -53,7 +53,6 @@ def create_message_sender(app):
                 raise e
     return send_message
 
-
 def add_scheduled_message(session_name, hour, minute, phone, message, type="text", target="Chat", start_date=None, recurrence=None):
     """Add a new scheduled message with optional recurrence"""
     try:
@@ -247,9 +246,9 @@ def check_session_status():
     print("Scheduler initialized with health and session checks")
 
 # Add to your scheduler initialization
-scheduler.add_job(
-    ImageGenerator.cleanup_old_images,
-    'interval',
-    hours=24,
-    id='cleanup_gold_price_images'
-)
+# scheduler.add_job(
+#     ImageGenerator.cleanup_old_images,
+#     'interval',
+#     hours=24,
+#     id='cleanup_gold_price_images'
+# )

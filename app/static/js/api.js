@@ -15,7 +15,7 @@ const userAPI = {
   validateField: async (field, value) => {
     try {
       const result = await window.pb.collection("usersku").getList(1, 1, {
-        filter: `${field} = "${value}"`,
+        filter: `${field} = "${value}"`
       });
       return result.items.length === 0;
     } catch (error) {
@@ -34,7 +34,7 @@ const userAPI = {
   getAllUsers: (page = 1, perPage = 50, options = {}) =>
     window.pb.collection("usersku").getList(page, perPage, {
       sort: "username",
-      ...options,
+      ...options
     }),
 
   validateReferralCode: async (code) =>
@@ -45,14 +45,14 @@ const userAPI = {
   getUserDetails: async (userId) => {
     if (!userId) return null;
     return window.pb.collection("usersku").getOne(userId, {
-      fields: "id,username,name,email,avatar_url",
+      fields: "id,username,name,email,avatar_url"
     });
   },
 
   getUsername: async (userId) => {
     const record = await userAPI.getProfile(userId);
     return record?.name || record?.username || null;
-  },
+  }
 };
 
 // Authentication API
@@ -69,7 +69,7 @@ const authAPI = {
         .getOne(roleRecord.role);
       return {
         role: roleDetails?.name || "guest",
-        tenantId: roleRecord.tenant,
+        tenantId: roleRecord.tenant
       };
     } catch (error) {
       console.error("Error checking user role:", error);
@@ -90,7 +90,7 @@ const authAPI = {
   getCurrentUser: () => {
     if (!window.pb.authStore.isValid) return null;
     return window.pb.authStore.model;
-  },
+  }
 };
 
 // List of Values (LOV) API
@@ -98,6 +98,23 @@ const LOV = {
   getUsers: (page = 1, perPage = 50, options = {}) =>
     window.pb.collection("userku_lov").getFullList(page, perPage, {
       sort: "-created",
-      ...options,
+      ...options
+    })
+};
+
+// Scheduler API
+const schedulerAPI = {
+  createScheduledMessage: (data) =>
+    pb.collection("whatsappku_scheduled_messages").create(data),
+
+  getScheduledMessage: (schedule_id) =>
+    pb.collection("whatsappku_scheduled_messages").getList(1, 50, {
+      filter: `schedule_id="${schedule_id}"`
     }),
+
+  deleteScheduledMessage: (schedule_id) =>
+    pb.collection("whatsappku_scheduled_messages").delete(schedule_id),
+
+  updateScheduledMessage: (schedule_id, data) =>
+    pb.collection("whatsappku_scheduled_messages").update(schedule_id, data)
 };
