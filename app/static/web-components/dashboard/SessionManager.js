@@ -109,11 +109,16 @@ class SessionManager extends HTMLElement {
 
   async createSession() {
     const sessionName = this.generateNextSessionName();
+
+    const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
     try {
       const response = await fetch("/api/session/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: sessionName, start: true })
+        body: JSON.stringify({
+          name: sessionName + "_" + loggedUser.username,
+          start: true
+        })
       });
 
       const result = await response.json();

@@ -1,3 +1,23 @@
+function logout() {
+  try {
+    // Clear the PocketBase instance (if applicable)
+    if (window.pb && typeof window.pb.authStore !== "undefined") {
+      window.pb.authStore.clear();
+    }
+
+    // Clear session-related data
+    window.pb = null;
+    localStorage.removeItem("authToken"); // If you store tokens
+    sessionStorage.clear();
+
+    // Redirect to login page
+    window.location.href = "/login";
+  } catch (error) {
+    console.error("Logout error:", error);
+    window.location.href = "/login"; // Ensure redirect even on error
+  }
+}
+
 function showNotification(message, type) {
   // Create notification element
   const notification = document.createElement("div");
@@ -40,7 +60,7 @@ function updateTimeToDate(arr) {
 
     return {
       ...item,
-      time: new Date(year, month - 1, day, hour, minute), // Create new Date object
+      time: new Date(year, month - 1, day, hour, minute) // Create new Date object
     };
   });
 }

@@ -77,6 +77,7 @@ class LoginForm extends HTMLElement {
           const { role } = await authAPI.checkUserRole(authData.record.id);
 
           // Store auth data
+          localStorage.setItem("loggedUser", JSON.stringify(authData.record));
           localStorage.setItem("userRole", role);
           localStorage.setItem("isAdmin", role === "admin");
 

@@ -10,89 +10,44 @@ class RegisterForm extends HTMLElement {
         <div class="glass rounded-2xl p-8 w-full max-w-md">
           <h2 class="text-3xl font-bold text-white mb-8 text-center">Create an Account</h2>
           <form id="registerForm" class="space-y-6">
-            <div class="space-y-2">
-              <label for="username" class="block text-sm font-medium text-white">Username</label>
-              <input 
-                type="text" 
-                id="username" 
-                name="username" 
-                required
-                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
-                placeholder="Enter your username"
-              >
-            </div>
-
-            <div class="space-y-2">
-              <label for="email" class="block text-sm font-medium text-white">Email</label>
-              <input 
-                type="email" 
-                id="email" 
-                name="email" 
-                required
-                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
-                placeholder="Enter your email"
-              >
-            </div>
-
-            <div class="space-y-2">
-              <label for="password" class="block text-sm font-medium text-white">Password</label>
-              <input 
-                type="password" 
-                id="password" 
-                name="password" 
-                required
-                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
-                placeholder="Enter your password"
-              >
-            </div>
-
-            <div class="space-y-2">
-              <label for="confirmPassword" class="block text-sm font-medium text-white">Confirm Password</label>
-              <input 
-                type="password" 
-                id="confirmPassword" 
-                name="confirmPassword" 
-                required
-                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
-                placeholder="Confirm your password"
-              >
-            </div>
-
-            <div class="space-y-2">
-              <label for="fullName" class="block text-sm font-medium text-white">Full Name</label>
-              <input 
-                type="text" 
-                id="fullName" 
-                name="fullName" 
-                required
-                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
-                placeholder="Enter your full name"
-              >
-            </div>
-
-            <div class="space-y-2">
-              <label for="phone" class="block text-sm font-medium text-white">Phone Number</label>
-              <input 
-                type="tel" 
-                id="phone" 
-                name="phone" 
-                required
-                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
-                placeholder="Enter your phone number"
-              >
-            </div>
-
-            <div class="space-y-2">
-              <label for="noIc" class="block text-sm font-medium text-white">IC Number</label>
-              <input 
-                type="text" 
-                id="noIc" 
-                name="noIc" 
-                required
-                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
-                placeholder="Enter your IC number"
-              >
-            </div>
+            
+            ${this.renderInput(
+              "username",
+              "text",
+              "Username",
+              "Enter your username"
+            )}
+            ${this.renderInput("email", "email", "Email", "Enter your email")}
+            
+            ${this.renderPasswordInput(
+              "password",
+              "Password",
+              "Enter your password"
+            )}
+            ${this.renderPasswordInput(
+              "confirmPassword",
+              "Confirm Password",
+              "Confirm your password"
+            )}
+            
+            ${this.renderInput(
+              "fullName",
+              "text",
+              "Full Name",
+              "Enter your full name"
+            )}
+            ${this.renderInput(
+              "phone",
+              "tel",
+              "Phone Number",
+              "Enter your phone number"
+            )}
+            ${this.renderInput(
+              "noIc",
+              "text",
+              "IC Number",
+              "Enter your IC number"
+            )}
 
             <button 
               type="submit"
@@ -112,7 +67,57 @@ class RegisterForm extends HTMLElement {
       </div>
     `;
 
+    this.addEventListeners();
+  }
+
+  renderInput(id, type, label, placeholder) {
+    return `
+      <div class="space-y-2">
+        <label for="${id}" class="block text-sm font-medium text-white">${label}</label>
+        <input 
+          type="${type}" 
+          id="${id}" 
+          name="${id}" 
+          required
+          class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition"
+          placeholder="${placeholder}"
+        >
+      </div>
+    `;
+  }
+
+  renderPasswordInput(id, label, placeholder) {
+    return `
+      <div class="space-y-2 relative">
+        <label for="${id}" class="block text-sm font-medium text-white">${label}</label>
+        <div class="relative">
+          <input 
+            type="password" 
+            id="${id}" 
+            name="${id}" 
+            required
+            class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition pr-12"
+            placeholder="${placeholder}"
+          >
+          <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white focus:outline-none" data-toggle="${id}">
+            👁
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  addEventListeners() {
     const form = this.querySelector("#registerForm");
+
+    // Toggle password visibility
+    this.querySelectorAll("[data-toggle]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = this.querySelector(`#${button.dataset.toggle}`);
+        input.type = input.type === "password" ? "text" : "password";
+      });
+    });
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
@@ -127,14 +132,11 @@ class RegisterForm extends HTMLElement {
         phone: form.phone.value,
         bio: JSON.stringify({}),
         bank_details: JSON.stringify({}),
-        kodku: this.generateKodku(form.username.value),
+        kodku: this.generateKodku(form.username.value)
       };
 
       try {
-        // Create user directly with PocketBase
         const record = await pb.collection("usersku").create(formData);
-
-        // Request email verification
         await pb.collection("usersku").requestVerification(formData.email);
 
         this.showNotification(
