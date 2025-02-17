@@ -107,28 +107,43 @@ class SessionManager extends HTMLElement {
     }
   }
 
-  async createSession() {
-    const sessionName = this.generateNextSessionName();
-
-    const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
+  async createSession(phone) {
     try {
+      const sessionName = this.generateNextSessionName();
+      const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
+
+      const sessionNameWithDateTime = `${sessionName}_${
+        loggedUser.username
+      }_${getTodayFormattedDateTime()}`;
+
+      // Step 1: Create a session using sessionAPI (Ensure this API is needed)
+      await sessionAPI.createSession({
+        name: sessionNameWithDateTime,
+        userku: loggedUser.id,
+        phone: Number(phone)
+      });
+
+      // Step 2: Send request to the backend
       const response = await fetch("/api/session/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: sessionName + "_" + loggedUser.username,
+          name: sessionNameWithDateTime,
           start: true
         })
       });
 
       const result = await response.json();
-      if (response.ok) {
-        showNotification("Session created successfully", "success");
-        await this.refreshSessions();
-        return result;
-      } else {
+
+      if (!response.ok) {
         throw new Error(result.error || "Failed to create session");
       }
+
+      // Step 3: Show success notification and refresh sessions
+      showNotification("Session created successfully", "success");
+      await this.refreshSessions();
+
+      return result;
     } catch (error) {
       showNotification(`Error creating session: ${error.message}`, "error");
     }
@@ -416,7 +431,8 @@ class SessionManager extends HTMLElement {
     }
 
     if (args.requestType === "save" && args.action === "add") {
-      await this.createSession().then((res) => {
+      debugger;
+      await this.createSession(args.data.me.id).then((res) => {
         this.newPhoneRegister = args.data.me.id;
         this.newSessionRegister = res.name;
       });

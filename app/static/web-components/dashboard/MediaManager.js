@@ -122,25 +122,12 @@ class MediaManager extends HTMLElement {
         {
           field: "tags",
           headerText: "Tags",
-          width: 200,
-          template: (props) => `
-            <div class="tag-list">
-              ${props.tags
-                .map(
-                  (tag) => `
-                <span class="tag">${tag}</span>
-              `
-                )
-                .join("")}
-            </div>
-          `
+          width: 200
         },
         {
-          field: "created",
-          headerText: "Created",
-          width: 150,
-          type: "date",
-          format: "yMd"
+          field: "createdBy",
+          headerText: "Created By",
+          width: 150
         },
         {
           headerText: "Actions",
@@ -184,24 +171,26 @@ class MediaManager extends HTMLElement {
   }
 
   getPreviewTemplate(props) {
+    const defaultImage = "/static/media/default/default.jpg"; // Set your default image path
+
     switch (props.type) {
       case "image":
-        return `<img src="${props.url}" class="media-preview" alt="${props.name}">`;
+        return `<img loading="lazy" src="${props.url}" class="media-preview" alt="${props.name}" onerror="this.onerror=null;this.src='${defaultImage}';">`;
       case "video":
         return `
-          <div class="media-preview flex items-center justify-center bg-gray-800">
-            <i class="e-icons e-video media-type-icon"></i>
-          </div>`;
+              <div class="media-preview flex items-center justify-center bg-gray-800">
+                <i class="e-icons e-video media-type-icon"></i>
+              </div>`;
       case "audio":
         return `
-          <div class="media-preview flex items-center justify-center bg-gray-800">
-            <i class="e-icons e-audio media-type-icon"></i>
-          </div>`;
+              <div class="media-preview flex items-center justify-center bg-gray-800">
+                <i class="e-icons e-audio media-type-icon"></i>
+              </div>`;
       default:
         return `
-          <div class="media-preview flex items-center justify-center bg-gray-800">
-            <i class="e-icons e-file media-type-icon"></i>
-          </div>`;
+              <div class="media-preview flex items-center justify-center bg-gray-800">
+                <i class="e-icons e-file media-type-icon"></i>
+              </div>`;
     }
   }
 
@@ -218,10 +207,24 @@ class MediaManager extends HTMLElement {
     }
   }
 
+  async uploadMedia(data) {
+    const respond = await mediaAPI.uploadMedia(data);
+
+    this.mediaList = respond.items;
+    console.log(this.mediaList);
+  }
+
   async loadMedia() {
     try {
-      const response = await fetch("/api/media");
-      this.mediaList = await response.json();
+      const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
+      const respond = await mediaAPI.getMediaByUserId(1, 50, loggedUser.id);
+
+      // const response = await fetch("/api/media");
+      // this.mediaList = await response.json();
+
+      this.mediaList = respond.items;
+      console.log("this.mediaList", this.mediaList);
+
       if (this.grid) {
         this.grid.dataSource = this.mediaList;
       }
@@ -274,14 +277,16 @@ class MediaManager extends HTMLElement {
 
   async deleteMedia(mediaId) {
     try {
-      const response = await fetch(`/api/media/${mediaId}`, {
+      await mediaAPI.deleteMedia(mediaId);
+
+      const mediaName = this.grid.dataSource.find((m) => m.id === mediaId).name;
+      const response = await fetch(`/api/media/${mediaName}`, {
         method: "DELETE"
       });
 
       const result = await response.json();
       if (result.success) {
         await this.loadMedia();
-        //this.render();
         showNotification("Media deleted successfully", "success");
       }
     } catch (error) {
@@ -383,10 +388,16 @@ class MediaManager extends HTMLElement {
             <input type="text" id="mediaType" />
           </div>
 
+           <!-- Caption Input -->
+          <div class="form-group">
+            <label class="text-sm font-medium mb-1">Caption</label>
+            <input type="text" id="mediaCaption" />
+          </div>
+
           <!-- Tags Input -->
           <div class="form-group">
             <label class="text-sm font-medium mb-1">Tags</label>
-            <div id="mediaTagsChip"></div>
+             <input type="text" id="mediaTagsChip" />
           </div>
         </div>
       </div>
@@ -437,7 +448,29 @@ class MediaManager extends HTMLElement {
         },
         success: (args) => {
           if (args.file?.name) {
+            debugger;
             this.uploadedFile = args.file;
+
+            const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
+            const getFileType =
+              document.querySelector("#mediaType").ej2_instances[0].value;
+
+            const getTag =
+              document.querySelector("#mediaTagsChip").ej2_instances[0].value;
+
+            const getCaption =
+              document.querySelector("#mediaCaption").ej2_instances[0].value;
+
+            const data = {
+              createdBy: loggedUser.id,
+              name: args.file?.name,
+              type: getFileType,
+              url: window.location.origin + "/static/media/" + args.file?.name,
+              caption: getCaption,
+              tags: getTag
+            };
+
+            this.uploadMedia(data);
             this.loadMedia();
           }
         }
@@ -446,7 +479,6 @@ class MediaManager extends HTMLElement {
       uploader.appendTo("#mediaFileUpload");
     }
 
-    // Initialize type dropdown
     const typeDropdown = new ej.dropdowns.DropDownList({
       dataSource: [
         { text: "Image", value: "image" },
@@ -460,33 +492,20 @@ class MediaManager extends HTMLElement {
 
     typeDropdown.appendTo("#mediaType");
 
-    // Initialize tags chip
-    const tagsChip = new ej.buttons.ChipList({
-      chips: data?.tags || [],
-      enableDelete: true,
-      selection: "Multiple",
-      cssClass: "e-outline",
-      created: () => {
-        // Add input for new tags
-        const input = document.createElement("input");
-        input.type = "text";
-        input.placeholder = "Add tag and press Enter";
-        input.className = "e-input mt-2";
-        input.addEventListener("keypress", (e) => {
-          if (e.key === "Enter") {
-            const value = e.target.value.trim();
-            if (value) {
-              const currentChips = tagsChip.chips;
-              tagsChip.chips = [...currentChips, value];
-              e.target.value = "";
-            }
-          }
-        });
-        document.querySelector("#mediaTagsChip").appendChild(input);
-      }
+    const mediaCaption = new ej.inputs.TextBox({
+      placeholder: "Enter caption",
+      value: data?.caption || ""
+    });
+
+    mediaCaption.appendTo("#mediaCaption");
+
+    const tagsChip = new ej.inputs.TextBox({
+      placeholder: "Enter Tag for template",
+      value: data?.tags || ""
     });
 
     tagsChip.appendTo("#mediaTagsChip");
+
     return true;
   }
 
@@ -494,7 +513,7 @@ class MediaManager extends HTMLElement {
     try {
       const type = document.querySelector("#mediaType").ej2_instances[0].value;
       const tags =
-        document.querySelector("#mediaTagsChip").ej2_instances[0].chips;
+        document.querySelector("#mediaTagsChip").ej2_instances[0].value;
 
       let data = {
         type,

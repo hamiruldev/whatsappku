@@ -102,6 +102,17 @@ const LOV = {
     })
 };
 
+// Session API
+const sessionAPI = {
+  createSession: (data) => pb.collection("whatsappku_sessions").create(data),
+
+  getSessions: (page = 1, perPage = 50, options = {}) =>
+    pb.collection("whatsappku_sessions").getList(page, perPage, {
+      sort: "-created",
+      ...options
+    })
+};
+
 // Scheduler API
 const schedulerAPI = {
   createScheduledMessage: (data) =>
@@ -117,4 +128,16 @@ const schedulerAPI = {
 
   updateScheduledMessage: (schedule_id, data) =>
     pb.collection("whatsappku_scheduled_messages").update(schedule_id, data)
+};
+
+// Media API
+const mediaAPI = {
+  getMediaByUserId: (page = 1, perPage = 50, userId) =>
+    pb.collection("whatsappku_media").getList(page, perPage, {
+      filter: `createdBy = "${userId}"`
+    }),
+
+  uploadMedia: (data) => pb.collection("whatsappku_media").create(data),
+
+  deleteMedia: (mediaId) => pb.collection("whatsappku_media").delete(mediaId)
 };

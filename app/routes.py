@@ -438,7 +438,7 @@ def register_routes(app):
                     filename = secure_filename(file.filename)
                     file_path = os.path.join(current_app.root_path, 'static', 'media', filename)
                     file.save(file_path)
-                    uploaded_files.append(filename)
+                    uploaded_files.append(f"/static/media/{filename}")
 
             return jsonify({'success': True, 'files': uploaded_files})
 
