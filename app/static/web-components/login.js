@@ -44,9 +44,16 @@ class LoginForm extends HTMLElement {
                     
                     <button 
                         type="submit"
-                        class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 text-white font-medium transition duration-200 ease-in-out transform hover:scale-[1.02]"
+                        id="loginButton"
+                        class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 text-white font-medium transition duration-200 ease-in-out transform hover:scale-[1.02] flex items-center justify-center"
                     >
-                        Sign in
+                        <span id="buttonText">Sign in</span>
+                        <span id="loadingSpinner" class="ml-2 hidden">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                        </span>
                     </button>
                 </form>
                 
@@ -61,10 +68,19 @@ class LoginForm extends HTMLElement {
     `;
 
     const form = this.querySelector("#loginForm");
+    const loginButton = this.querySelector("#loginButton");
+    const buttonText = this.querySelector("#buttonText");
+    const loadingSpinner = this.querySelector("#loadingSpinner");
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const username = form.username.value;
       const password = form.password.value;
+
+      // Show loading spinner and disable button
+      loginButton.disabled = true;
+      buttonText.classList.add("hidden");
+      loadingSpinner.classList.remove("hidden");
 
       try {
         // Authenticate directly with PocketBase
@@ -85,7 +101,8 @@ class LoginForm extends HTMLElement {
 
           // Redirect based on role
           setTimeout(() => {
-            window.location.href = role === "admin" ? "/dashboard" : "/";
+            window.location.href =
+              role === "admin" ? "/dashboard" : "/dashboard";
           }, 1500);
         }
       } catch (error) {
@@ -94,6 +111,11 @@ class LoginForm extends HTMLElement {
           error.message || "Invalid username or password",
           "error"
         );
+      } finally {
+        // Hide spinner and enable button
+        loginButton.disabled = false;
+        buttonText.classList.remove("hidden");
+        loadingSpinner.classList.add("hidden");
       }
     });
   }

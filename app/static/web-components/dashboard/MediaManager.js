@@ -136,7 +136,7 @@ class MediaManager extends HTMLElement {
             <div class="flex gap-2">
               <button class="e-btn e-small e-round e-primary edit-tags" 
                       data-id="${props.id}" title="Edit Tags">
-                <i class="e-icons e-tag"></i>
+                <i class="e-icons e-edit"></i>
               </button>
               <button class="e-btn e-small e-round e-danger delete-media" 
                       data-id="${props.id}" title="Delete">
@@ -212,6 +212,7 @@ class MediaManager extends HTMLElement {
 
     this.mediaList = respond.items;
     console.log(this.mediaList);
+    return respond;
   }
 
   async loadMedia() {
@@ -438,7 +439,7 @@ class MediaManager extends HTMLElement {
     if (isNew) {
       // Initialize file upload
       const uploader = new ej.inputs.Uploader({
-        autoUpload: true,
+        autoUpload: false,
         multiple: false,
         maxFileSize: 50000000,
         allowedExtensions: ".png,.jpg,.jpeg,.gif,.mp4,.webm,.mp3,.wav",
@@ -446,7 +447,7 @@ class MediaManager extends HTMLElement {
           saveUrl: "/api/media/upload",
           removeUrl: "/api/media/remove"
         },
-        success: (args) => {
+        success: async (args) => {
           if (args.file?.name) {
             debugger;
             this.uploadedFile = args.file;
@@ -470,8 +471,16 @@ class MediaManager extends HTMLElement {
               tags: getTag
             };
 
-            this.uploadMedia(data);
-            this.loadMedia();
+            const respond = await this.uploadMedia(data);
+            debugger;
+            if (respond.id) {
+              await this.loadMedia();
+              dialog.hide();
+              showNotification(
+                `Media ${isNew ? "added" : "updated"} successfully`,
+                "success"
+              );
+            }
           }
         }
       });
@@ -510,43 +519,10 @@ class MediaManager extends HTMLElement {
   }
 
   async handleMediaSave(dialog, isNew, originalData) {
-    try {
-      const type = document.querySelector("#mediaType").ej2_instances[0].value;
-      const tags =
-        document.querySelector("#mediaTagsChip").ej2_instances[0].value;
+    const mediaFileUpload =
+      document.querySelector("#mediaFileUpload").ej2_instances[0];
 
-      let data = {
-        type,
-        tags,
-        created: new Date().toISOString()
-      };
-
-      if (this.uploadedFile) {
-        data.file = this.uploadedFile;
-      }
-
-      const url = isNew ? "/api/media" : `/api/media/${originalData.id}`;
-      const method = isNew ? "POST" : "PUT";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        await this.loadMedia();
-        dialog.hide();
-        showNotification(
-          `Media ${isNew ? "added" : "updated"} successfully`,
-          "success"
-        );
-      }
-    } catch (error) {
-      console.error("Save error:", error);
-      showNotification("Error saving media", "error");
-    }
+    mediaFileUpload.upload(mediaFileUpload.getFilesData());
   }
 }
 

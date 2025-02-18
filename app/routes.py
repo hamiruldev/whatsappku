@@ -423,6 +423,7 @@ def register_routes(app):
 
     @app.route('/api/media/upload', methods=['POST'])
     def upload_media():
+        # TODO: should use media services
         """Upload media files"""
         try:
             # Try both methods to fetch files
