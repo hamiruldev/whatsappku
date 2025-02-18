@@ -31,6 +31,14 @@ class SessionManager extends HTMLElement {
       const res = await fetch("/api/sessions");
       const data = await res.json();
 
+
+
+      // load session from pocketbase
+      const sessionResponse = await pb.collection("whatsappku_sessions").getList(1, 50, {
+        sort: "-created",
+        filter: `userku="${user.id}"`
+      });
+
       // Create a lookup object { name → id }
       const sessionMap = {};
       response.items.forEach((item) => {
@@ -416,7 +424,7 @@ class SessionManager extends HTMLElement {
         headerText: "Actions",
         width: 120,
         template:
-          "<dialog-button session-name='${name}' session-status='${status}'></dialog-button>"
+          "<dialog-button session-name='${name}' session-id='${id}' session-status='${status}'></dialog-button>"
       }
     ];
   }
@@ -464,9 +472,13 @@ class SessionManager extends HTMLElement {
   }
 
   async handleGridClick(event) {
+    debugger;
     // Handle dialog-click event from DialogButton component
     if (event.type === "dialog-click") {
-      await this.showManageDialog(event.detail.sessionName);
+      await this.showManageDialog(
+        event.detail.sessionId,
+        event.detail.sessionName
+      );
       return;
     }
 
@@ -598,7 +610,7 @@ class SessionManager extends HTMLElement {
     }
   }
 
-  async showManageDialog(sessionName) {
+  async showManageDialog(sessionId, sessionName) {
     const dialogHtml = `
       <div class="session-manage-dialog">
         <div class="e-tab-header">
@@ -616,7 +628,7 @@ class SessionManager extends HTMLElement {
 
           <div class="e-item">
             <div class="calendar-container">
-              <schedule-manager sessionName="${sessionName}"></schedule-manager>
+              <schedule-manager sessionId="${sessionId}"></schedule-manager>
             </div>
           </div>
 
@@ -811,21 +823,6 @@ class SessionManager extends HTMLElement {
       ).ej2_instances[0].editSettings.allowAdding = false;
     }
   }
-
-  async loadSchedules(sessionName, grid) {
-    try {
-      const response = await fetch(
-        `/api/scheduled-messages/session/${sessionName}`
-      );
-      const result = await response.json();
-      if (result.status === "success") {
-        grid.dataSource = result.data;
-        grid.refresh();
-      }
-    } catch (error) {
-      console.error("Error loading schedules:", error);
-    }
-  }
 }
 
 customElements.define("session-manager", SessionManager);
@@ -846,7 +843,7 @@ class DialogButton extends HTMLElement {
     // <p class="text-sm text-gray-500">${this.sessionStatus}</p>
     this.innerHTML = `
     <div class="flex flex-row items-center justify-between">
-      <button class="manage-btn e-control e-btn e-lib e-primary" data-session="${this.sessionName}">
+      <button class="manage-btn e-control e-btn e-lib e-primary" data-session="${this.sessionName}" data-session-id="${this.sessionId}">
         <span>Manage</span>
       </button>
     </div>
@@ -859,7 +856,7 @@ class DialogButton extends HTMLElement {
       this.dispatchEvent(
         new CustomEvent("dialog-click", {
           bubbles: true,
-          detail: { sessionName: this.sessionName }
+          detail: { sessionName: this.sessionName, sessionId: this.sessionId }
         })
       );
     });

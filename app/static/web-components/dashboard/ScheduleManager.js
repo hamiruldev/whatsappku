@@ -2,16 +2,16 @@ class ScheduleManager extends HTMLElement {
   constructor() {
     super();
     this.scheduleObj = null;
-    this.sessionName = this.getAttribute("sessionName");
+    this.sessionId = this.getAttribute("sessionId");
   }
 
   static get observedAttributes() {
-    return ["sessionName"];
+    return ["sessionId"];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === "sessionName" && oldValue !== newValue) {
-      this.sessionName = newValue;
+    if (name === "sessionId" && oldValue !== newValue) {
+      this.sessionId = newValue;
       if (this.isConnected) {
         this.loadSchedules();
       }
@@ -26,8 +26,13 @@ class ScheduleManager extends HTMLElement {
 
   async loadSchedules() {
     try {
-      const url = this.sessionName
-        ? `/api/scheduled-messages/session/${this.sessionName}`
+      const sessionId =
+        this.sessionId ||
+        document.querySelector("#managementDialog").ej2_instances[0]
+          .selectedSessionId;
+      debugger;
+      const url = sessionId
+        ? `/api/scheduled-messages/session/${sessionId}`
         : "/api/scheduled-messages";
 
       const response = await fetch(url);
@@ -35,10 +40,15 @@ class ScheduleManager extends HTMLElement {
 
       // Convert the data to schedule format
       this.events = this.convertToScheduleEvents(
-        this.sessionName ? data.data : data
+        this.sessionId ? data.data : data
       );
 
-      console.log("this.events", this.events);
+      if (this.scheduleObj) {
+        this.scheduleObj.eventSettings.dataSource = this.events;
+        this.scheduleObj.refresh();
+      }
+
+      console.log("Loaded schedules:", this.events);
     } catch (error) {
       console.error("Error loading schedules:", error);
       this.events = [];
@@ -82,8 +92,8 @@ class ScheduleManager extends HTMLElement {
   }
 
   render() {
-    const title = this.sessionName
-      ? `Schedule for ${this.sessionName}`
+    const title = this.sessionId
+      ? `Schedule for Session ${this.sessionId}`
       : "All Schedules";
 
     this.innerHTML = `
@@ -330,7 +340,10 @@ class ScheduleManager extends HTMLElement {
       formData.job_id = result2.id;
 
       if (result2.status === "success") {
-        await schedulerAPI.updateScheduledMessage(formData.schedule_id, formData);
+        await schedulerAPI.updateScheduledMessage(
+          formData.schedule_id,
+          formData
+        );
         this.saveSchedule(formData.schedule_id, formData);
 
         showNotification("Schedule saved successfully", "success");
@@ -366,12 +379,12 @@ class ScheduleManager extends HTMLElement {
       phone: document.querySelector("#phone").value,
       message: document.querySelector("#message").value,
       type: getValue("#type"),
-      time: selectedTime, // Full datetime for display
+      time: selectedTime,
       hour: dateObj.getHours(),
       minute: dateObj.getMinutes(),
-      start_date: dateObj.toISOString(), // Include the full date
-      recurrence: recurrenceRule, // Include recurrence pattern
-      session: sessionId,
+      start_date: dateObj.toISOString(),
+      recurrence: recurrenceRule,
+      session_id: sessionId,
       status: "pending"
     };
   }
@@ -391,16 +404,16 @@ class ScheduleManager extends HTMLElement {
    * Saves the scheduled message to the backend
    */
   async createCronJob(originalData, formData) {
-    const sessionName =
+    const sessionId =
       document.querySelector("#managementDialog").ej2_instances[0]
-        .selectedSessionName;
+        .selectedSessionId;
 
     const response = await fetch("/api/scheduled-messages", {
       method: originalData.Id ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: originalData.Id,
-        session_name: sessionName,
+        session_id: sessionId,
         ...formData
       })
     });

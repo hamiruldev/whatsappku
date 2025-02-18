@@ -1537,6 +1537,22 @@
         "schema": [
             {
                 "system": false,
+                "id": "uarhqufw",
+                "name": "createdBy",
+                "type": "relation",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "collectionId": "_pb_users_auth_",
+                    "cascadeDelete": false,
+                    "minSelect": null,
+                    "maxSelect": 1,
+                    "displayFields": null
+                }
+            },
+            {
+                "system": false,
                 "id": "media_name_field",
                 "name": "name",
                 "type": "text",
@@ -1607,9 +1623,7 @@
                 }
             }
         ],
-        "indexes": [
-            "CREATE UNIQUE INDEX `idx_G3ZcI94` ON `whatsappku_media` (`url`)"
-        ],
+        "indexes": [],
         "listRule": "@request.auth.id != \"\"",
         "viewRule": "@request.auth.id != \"\"",
         "createRule": "@request.auth.id != \"\"",
@@ -1667,11 +1681,39 @@
                 "options": {
                     "maxSelect": 1,
                     "values": [
-                        "status",
-                        "chat",
-                        "reel",
-                        "post"
+                        "Status",
+                        "Chat",
+                        "Reel",
+                        "Post"
                     ]
+                }
+            },
+            {
+                "system": false,
+                "id": "phone_number",
+                "name": "phone",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "message_content",
+                "name": "message",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
                 }
             },
             {
@@ -1693,7 +1735,7 @@
             {
                 "system": false,
                 "id": "schedule_time",
-                "name": "schedule_time",
+                "name": "start_date",
                 "type": "date",
                 "required": true,
                 "presentable": false,
@@ -1734,8 +1776,59 @@
                     "values": [
                         "pending",
                         "sent",
-                        "failed"
+                        "failed",
+                        "disabled"
                     ]
+                }
+            },
+            {
+                "system": false,
+                "id": "9enj2qd5",
+                "name": "job_id",
+                "type": "text",
+                "required": true,
+                "presentable": false,
+                "unique": true,
+                "options": {
+                    "min": null,
+                    "max": null,
+                    "pattern": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "enabled  ",
+                "name": "enabled",
+                "type": "bool",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {}
+            },
+            {
+                "system": false,
+                "id": "last_run",
+                "name": "last_run",
+                "type": "date",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": "",
+                    "max": ""
+                }
+            },
+            {
+                "system": false,
+                "id": "next_run",
+                "name": "next_run",
+                "type": "date",
+                "required": false,
+                "presentable": false,
+                "unique": false,
+                "options": {
+                    "min": "",
+                    "max": ""
                 }
             }
         ],
@@ -1803,9 +1896,9 @@
         ],
         "listRule": "@request.auth.id != \"\"",
         "viewRule": "@request.auth.id != \"\"",
-        "createRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
-        "updateRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
-        "deleteRule": "@request.auth.id != \"\" && @request.auth.tenant_roles_via_user.role.name = \"admin\"",
+        "createRule": "@request.auth.id != \"\"",
+        "updateRule": "@request.auth.id != \"\"",
+        "deleteRule": "@request.auth.id != \"\"",
         "options": {}
     },
     {
@@ -1816,7 +1909,7 @@
         "schema": [
             {
                 "system": false,
-                "id": "egiicpqr",
+                "id": "rmmriwwx",
                 "name": "username",
                 "type": "text",
                 "required": false,

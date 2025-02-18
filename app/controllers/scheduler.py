@@ -53,7 +53,7 @@ def create_message_sender(app):
                 raise e
     return send_message
 
-def add_scheduled_message(session_name, hour, minute, phone, message, type="text", target="Chat", start_date=None, recurrence=None):
+def add_scheduled_message(session_id, hour, minute, phone, message, type="text", target="Chat", start_date=None, recurrence=None):
     """Add a new scheduled message with optional recurrence"""
     try:
         app = current_app._get_current_object()
@@ -81,7 +81,7 @@ def add_scheduled_message(session_name, hour, minute, phone, message, type="text
                     id=job_id,
                     args=[phone, message],
                     kwargs={
-                        'session_name': session_name,
+                        'session_id': session_id,
                         'type': type,
                         'target': target
                     },
@@ -171,14 +171,15 @@ def create_trigger_from_recurrence(recurrence_rule, hour, minute, start_date=Non
         current_app.logger.error(f"Trigger kwargs: {trigger_kwargs}")
         raise Exception(f"Invalid recurrence pattern: {str(e)}")
 
-def get_all_scheduled_messages(session_name=None):
+def get_all_scheduled_messages(session_id=None):
+    """Get all scheduled messages, optionally filtered by session_id"""
     jobs = scheduler.get_jobs()
     scheduled_messages = []
     
     for job in jobs:
-        # Skip jobs that don't match the session_name if specified
-        job_session = job.kwargs.get('session_name')
-        if session_name and job_session != session_name:
+        # Skip jobs that don't match the session_id if specified
+        job_session = job.kwargs.get('session_id')  # Changed from session_name to session_id
+        if session_id and job_session != session_id:
             continue
             
         trigger = job.trigger
@@ -196,13 +197,16 @@ def get_all_scheduled_messages(session_name=None):
         
         scheduled_messages.append({
             'id': job.id,
-            'session_name': job_session,
+            'session_id': job_session,  # Changed from session_name to session_id
             'enabled': True,
             'hour': hour,
             'minute': minute,
             'time': formatted_time,
             'phone': phone,
-            'message': message
+            'message': message,
+            'type': job.kwargs.get('type', 'text'),
+            'target': job.kwargs.get('target', 'Chat'),
+            'recurrence': str(job.trigger) if 'cron' in str(job.trigger).lower() else 'none'
         })
     
     return scheduled_messages
@@ -244,6 +248,118 @@ def check_session_status():
     
     
     print("Scheduler initialized with health and session checks")
+
+def backup_jobs_to_pocketbase():
+    """Backup all scheduler jobs to PocketBase"""
+    from app.services.pocketbase import create_record, update_record, get_first_record
+    
+    try:
+        jobs = scheduler.get_jobs()
+        backed_up_count = 0
+        
+        for job in jobs:
+            # Extract job details
+            trigger = job.trigger
+            hour = trigger.fields[5].expressions[0].first
+            minute = trigger.fields[6].expressions[0].first
+            phone, message = job.args if len(job.args) >= 2 else ('none', 'none')
+            
+            # Create job data
+            job_data = {
+                'job_id': job.id,
+                'session': job.kwargs.get('session_id'),  # Changed from session_name to session_id
+                'platform': 'Whatsapp',
+                'target': job.kwargs.get('target', 'Chat'),
+                'phone': phone,
+                'message': message,
+                'type': job.kwargs.get('type', 'text'),
+                'start_date': job.trigger.start_date.isoformat() if hasattr(job.trigger, 'start_date') else None,
+                'recurrence': str(job.trigger) if 'cron' in str(job.trigger).lower() else 'none',
+                'status': 'pending',
+                'enabled': True,
+                'last_run': None,
+                'next_run': job.next_run_time.isoformat() if job.next_run_time else None,
+                'hour': hour,
+                'minute': minute
+            }
+            
+            try:
+                # Try to find existing job
+                existing_job = get_first_record('whatsappku_scheduled_messages', f'job_id = "{job.id}"')
+                if existing_job:
+                    # Update existing job
+                    update_record('whatsappku_scheduled_messages', existing_job.id, job_data)
+                else:
+                    # Create new job
+                    create_record('whatsappku_scheduled_messages', job_data)
+                backed_up_count += 1
+                
+            except Exception as e:
+                current_app.logger.error(f"Error backing up job {job.id}: {str(e)}")
+                
+        current_app.logger.info(f"Successfully backed up {backed_up_count} jobs to PocketBase")
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Error backing up jobs to PocketBase: {str(e)}")
+        return False
+
+def restore_jobs_from_pocketbase():
+    """Restore scheduler jobs from PocketBase backup"""
+    from app.services.pocketbase import list_records
+    
+    try:
+        # Get all backed up jobs
+        result = list_records('whatsappku_scheduled_messages', filter_str='enabled = true')
+        restored_count = 0
+        
+        for job in result.items:
+            if not job.enabled:
+                continue
+                
+            try:
+                # Convert recurrence string back to proper format
+                recurrence = None
+                if job.recurrence and job.recurrence != 'none':
+                    recurrence = job.recurrence
+                
+                # Add job back to scheduler
+                add_scheduled_message(
+                    session_id=job.session,  # Changed from session_name to session_id
+                    hour=job.hour,
+                    minute=job.minute,
+                    phone=job.phone,
+                    message=job.message,
+                    type=job.type,
+                    target=job.target,
+                    start_date=job.start_date,
+                    recurrence=recurrence
+                )
+                restored_count += 1
+                
+            except Exception as e:
+                current_app.logger.error(f"Error restoring job {job.job_id}: {str(e)}")
+                
+        current_app.logger.info(f"Successfully restored {restored_count} jobs from PocketBase")
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Error restoring jobs from PocketBase: {str(e)}")
+        return False
+
+# Add backup/restore endpoints to routes.py
+def init_scheduler_with_backup():
+    """Initialize scheduler and restore jobs from backup"""
+    if not scheduler.running:
+        scheduler.start()
+        restore_jobs_from_pocketbase()
+        
+    # Schedule periodic backup
+    scheduler.add_job(
+        backup_jobs_to_pocketbase,
+        'interval',
+        hours=1,
+        id='backup_scheduler_jobs',
+        replace_existing=True
+    )
 
 # Add to your scheduler initialization
 # scheduler.add_job(

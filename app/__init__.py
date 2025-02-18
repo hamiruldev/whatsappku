@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from config import config
 import os
-from app.controllers.scheduler import scheduler
+from app.controllers.scheduler import scheduler, init_scheduler_with_backup
 
 def create_app():
     # Get environment from FLASK_ENV, default to 'development'
@@ -33,14 +33,13 @@ def create_app():
         from app.controllers.media import media_bp
         app.register_blueprint(media_bp, url_prefix='/api/media')
         
-        # Start the scheduler
-        if not scheduler.running:
-            scheduler.start()
+        # Initialize scheduler with backup/restore functionality
+        init_scheduler_with_backup()
             
     @app.before_first_request
     def init_scheduler():
-        # Ensure scheduler is running
+        # Ensure scheduler is running with backup/restore
         if not scheduler.running:
-            scheduler.start()
+            init_scheduler_with_backup()
             
     return app

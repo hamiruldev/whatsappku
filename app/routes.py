@@ -70,15 +70,15 @@ def register_routes(app):
         from app.controllers.scheduler import add_scheduled_message, get_all_scheduled_messages, remove_scheduled_message
         
         if request.method == 'GET':
-            session_name = request.args.get('session')
-            messages = get_all_scheduled_messages(session_name)
+            session_id = request.args.get('session')
+            messages = get_all_scheduled_messages(session_id)
             return jsonify(messages)
         
         elif request.method == 'POST':
             data = request.json
             try:
                 job_id = add_scheduled_message(
-                    session_name=data.get('session_name'),
+                    session_id=data.get('session_id'),
                     hour=data.get('hour'),
                     minute=data.get('minute'),
                     phone=data.get('phone'),
@@ -120,13 +120,13 @@ def register_routes(app):
                 'message': 'Failed to remove scheduled message'
             }), 400
 
-    @app.route('/api/scheduled-messages/session/<session_name>', methods=['GET'])
-    def get_session_messages(session_name):
+    @app.route('/api/scheduled-messages/session/<session_id>', methods=['GET'])
+    def get_session_messages(session_id):
         """Get all scheduled messages for a specific session"""
         from app.controllers.scheduler import get_all_scheduled_messages
         
         try:
-            messages = get_all_scheduled_messages(session_name)
+            messages = get_all_scheduled_messages(session_id)
             return jsonify({
                 'status': 'success',
                 'data': messages
@@ -143,14 +143,14 @@ def register_routes(app):
         from app.controllers.scheduler import add_scheduled_message
         
         data = request.json
-        session_name = data.get('session')
+        session_id = data.get('session')
         messages = data.get('messages', [])
         
         results = []
         for msg in messages:
             try:
                 job_id = add_scheduled_message(
-                    session_name=session_name,
+                    session_id=session_id,
                     hour=msg.get('hour'),
                     minute=msg.get('minute'),
                     phone=msg.get('phone'),
@@ -478,6 +478,50 @@ def register_routes(app):
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/scheduler/backup', methods=['POST'])
+    def backup_scheduler():
+        """Manually trigger a backup of scheduler jobs"""
+        from app.controllers.scheduler import backup_jobs_to_pocketbase
+        
+        try:
+            success = backup_jobs_to_pocketbase()
+            if success:
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Successfully backed up scheduler jobs'
+                })
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to backup scheduler jobs'
+            }), 500
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 500
+
+    @app.route('/api/scheduler/restore', methods=['POST'])
+    def restore_scheduler():
+        """Manually trigger a restore of scheduler jobs"""
+        from app.controllers.scheduler import restore_jobs_from_pocketbase
+        
+        try:
+            success = restore_jobs_from_pocketbase()
+            if success:
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Successfully restored scheduler jobs'
+                })
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to restore scheduler jobs'
+            }), 500
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 500
 
     # Add authentication middleware for protected routes
     @app.before_request
