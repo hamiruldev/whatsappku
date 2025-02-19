@@ -14,10 +14,10 @@ class SessionManager extends HTMLElement {
   }
 
   async connectedCallback() {
-    const response = await this.loadUserSession();
+    const response = await this.loadUserSessionFromPb();
 
     if (response.items.length > 0) {
-      await this.loadSessions(response);
+      await this.loadSessionsWaha(response);
     }
 
     this.calculateNextSessionNumber();
@@ -26,24 +26,18 @@ class SessionManager extends HTMLElement {
     this.setupWebSocket();
   }
 
-  async loadSessions(response) {
+  async loadSessionsWaha(response) {
     try {
       const res = await fetch("/api/sessions");
       const data = await res.json();
-
-
-
-      // load session from pocketbase
-      const sessionResponse = await pb.collection("whatsappku_sessions").getList(1, 50, {
-        sort: "-created",
-        filter: `userku="${user.id}"`
-      });
 
       // Create a lookup object { name → id }
       const sessionMap = {};
       response.items.forEach((item) => {
         sessionMap[item.name] = item.id; // Store id by session name
       });
+
+      console.log("sessionMap", sessionMap);
 
       // Filter sessions that exist in response
       const filteredSessions = data.details.filter((session) =>
@@ -65,7 +59,7 @@ class SessionManager extends HTMLElement {
     }
   }
 
-  async loadUserSession() {
+  async loadUserSessionFromPb() {
     const user = await authAPI.getCurrentUser();
 
     const record = await pb.collection("whatsappku_sessions").getList(1, 50, {
@@ -389,6 +383,14 @@ class SessionManager extends HTMLElement {
   getGridColumns() {
     return [
       {
+        field: "id",
+        headerText: "ID",
+        width: 120,
+        textAlign: "Left",
+        allowEditing: false,
+        allowSorting: true
+      },
+      {
         field: "name",
         headerText: "Name",
         width: 120,
@@ -439,7 +441,6 @@ class SessionManager extends HTMLElement {
     }
 
     if (args.requestType === "save" && args.action === "add") {
-      debugger;
       await this.createSession(args.data.me.id).then((res) => {
         this.newPhoneRegister = args.data.me.id;
         this.newSessionRegister = res.name;
@@ -472,7 +473,6 @@ class SessionManager extends HTMLElement {
   }
 
   async handleGridClick(event) {
-    debugger;
     // Handle dialog-click event from DialogButton component
     if (event.type === "dialog-click") {
       await this.showManageDialog(
@@ -743,7 +743,6 @@ class SessionManager extends HTMLElement {
   }
 
   async loadQRCode(sessionName) {
-    debugger;
     try {
       const response = await fetch(`/api/session/auth/qr`, {
         method: "POST",
@@ -831,6 +830,7 @@ class DialogButton extends HTMLElement {
   constructor() {
     super();
     this.sessionName = this.getAttribute("session-name");
+    this.sessionId = this.getAttribute("session-id");
     this.sessionStatus = this.getAttribute("session-status");
   }
 
@@ -843,7 +843,7 @@ class DialogButton extends HTMLElement {
     // <p class="text-sm text-gray-500">${this.sessionStatus}</p>
     this.innerHTML = `
     <div class="flex flex-row items-center justify-between">
-      <button class="manage-btn e-control e-btn e-lib e-primary" data-session="${this.sessionName}" data-session-id="${this.sessionId}">
+      <button class="manage-btn e-control e-btn e-lib e-primary" data-session-name="${this.sessionName}" data-session-id="${this.sessionId}">
         <span>Manage</span>
       </button>
     </div>
@@ -863,12 +863,19 @@ class DialogButton extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["session-name"];
+    return ["session-name", "session-id"];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === "session-name") {
       this.sessionName = newValue;
+      if (this.isConnected) {
+        this.render();
+      }
+    }
+
+    if (name === "session-id") {
+      this.sessionId = newValue;
       if (this.isConnected) {
         this.render();
       }

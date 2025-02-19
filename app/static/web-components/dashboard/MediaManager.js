@@ -449,7 +449,6 @@ class MediaManager extends HTMLElement {
         },
         success: async (args) => {
           if (args.file?.name) {
-            debugger;
             this.uploadedFile = args.file;
 
             const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
@@ -472,7 +471,6 @@ class MediaManager extends HTMLElement {
             };
 
             const respond = await this.uploadMedia(data);
-            debugger;
             if (respond.id) {
               await this.loadMedia();
               dialog.hide();

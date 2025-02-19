@@ -63,7 +63,7 @@ def list_records(collection_name, page=1, per_page=50, filter_str=None):
     """List records from a collection with optional filtering"""
     try:
         collection = get_collection(collection_name)
-        return collection.get_list(page, per_page, { "filter": filter_str})
+        return collection.get_list(page, per_page, { "filter": filter_str, "expand": "session"})
     except Exception as e:
         current_app.logger.error(f"Error listing records from {collection_name}: {str(e)}")
         raise
@@ -75,4 +75,27 @@ def get_first_record(collection_name, filter_str):
         return collection.get_first_list_item(filter_str)
     except Exception as e:
         current_app.logger.error(f"Error getting first record from {collection_name}: {str(e)}")
-        raise 
+        raise
+
+def fetch_lov(collection_name):
+    try:
+        # Access the 'whatsappku_lov' collection
+        collection = get_collection(collection_name)
+        
+        # Fetch the list of values (LOV) with pagination
+        result = collection.get_list(1, 50)  # Fetch page 1 with 50 records per page
+        
+        # Debugging: Print the result object
+        print(f"Fetched result: {result}")
+        
+        # Check if items are present
+        if result and hasattr(result, 'items'):
+            for item in result.items:
+                print(item)  # Or handle the item as needed
+            return result.items
+        else:
+            print("No items found in the result.")
+            return None
+    except Exception as e:
+        print(f"Error fetching LOV: {e}")
+        return None

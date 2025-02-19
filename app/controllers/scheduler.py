@@ -8,6 +8,7 @@ from pytz import timezone
 from app.services.image_generator import ImageGenerator
 from apscheduler.triggers.cron import CronTrigger
 import re
+from app.services.pocketbase import get_collection
 
 # Create scheduler with proper timezone and settings
 scheduler = BackgroundScheduler(
@@ -23,15 +24,17 @@ scheduler = BackgroundScheduler(
 scheduler.start()
 
 def create_message_sender(app):
-    def send_message(phone, message, session_name=None, type="text", target="Chat"):
+    def send_message(phone, message, session_id=None, session_name=None, type="text", target="Chat", recurrence=None):
         from app.controllers.whatsapp import WhatsAppController
         from app.services.image_generator import ImageGenerator
         
         with app.app_context():
             current_app.logger.info(f"Attempting to send scheduled message at {datetime.now()}")
-            current_app.logger.info(f"Session: {session_name}")
+            current_app.logger.info(f"Session Name: {session_name}")
+            current_app.logger.info(f"Session ID: {session_id}")
             current_app.logger.info(f"Type: {type}")
             current_app.logger.info(f"Target: {target}")
+            current_app.logger.info(f"Recurrence: {recurrence}")
             
             try:
                 if target == "Status":
@@ -53,7 +56,7 @@ def create_message_sender(app):
                 raise e
     return send_message
 
-def add_scheduled_message(session_id, hour, minute, phone, message, type="text", target="Chat", start_date=None, recurrence=None):
+def add_scheduled_message(session_id, session_name, hour, minute, phone, message, type="text", target="Chat", start_date=None, recurrence=None):
     """Add a new scheduled message with optional recurrence"""
     try:
         app = current_app._get_current_object()
@@ -82,8 +85,10 @@ def add_scheduled_message(session_id, hour, minute, phone, message, type="text",
                     args=[phone, message],
                     kwargs={
                         'session_id': session_id,
+                        'session_name': session_name,
                         'type': type,
-                        'target': target
+                        'target': target,
+                        'recurrence': recurrence
                     },
                     replace_existing=True,
                     misfire_grace_time=None
@@ -107,9 +112,11 @@ def add_scheduled_message(session_id, hour, minute, phone, message, type="text",
                 id=job_id,
                 args=[phone, message],
                 kwargs={
+                    'session_id': session_id,
                     'session_name': session_name,
                     'type': type,
-                    'target': target
+                    'target': target,
+                    'recurrence': recurrence
                 },
                 replace_existing=True,
                 misfire_grace_time=None,
@@ -138,29 +145,39 @@ def create_trigger_from_recurrence(recurrence_rule, hour, minute, start_date=Non
             trigger_kwargs['start_date'] = start_date
             
         # If no recurrence rule, just return a basic trigger
-        if not recurrence_rule:
+        if not recurrence_rule or recurrence_rule == 'none':
             return CronTrigger(**trigger_kwargs)
             
-        # Handle different frequencies
-        if 'FREQ=DAILY' in recurrence_rule:
-            # For daily, we just need hour and minute which are already set
-            pass
+        # Handle cron format from frontend
+        if recurrence_rule.startswith('cron['):
+            # Extract hour and minute from cron format
+            cron_match = re.search(r"hour='(\d+)',\s*minute='(\d+)'", recurrence_rule)
+            if cron_match:
+                trigger_kwargs['hour'] = int(cron_match.group(1))
+                trigger_kwargs['minute'] = int(cron_match.group(2))
+                return CronTrigger(**trigger_kwargs)
             
-        elif 'FREQ=WEEKLY' in recurrence_rule:
-            # Extract day of week
-            days = re.search(r'BYDAY=([^;]+)', recurrence_rule)
-            if days:
-                # Convert from RRULE day format (MO,TU,etc) to cron format (0-6)
-                day_map = {'MO': 0, 'TU': 1, 'WE': 2, 'TH': 3, 'FR': 4, 'SA': 5, 'SU': 6}
-                day_list = days.group(1).split(',')
-                cron_days = [str(day_map[day]) for day in day_list]
-                trigger_kwargs['day_of_week'] = ','.join(cron_days)
+        # Handle RRULE format
+        if 'FREQ=' in recurrence_rule:
+            if 'FREQ=DAILY' in recurrence_rule:
+                # For daily, we just need hour and minute which are already set
+                pass
                 
-        elif 'FREQ=MONTHLY' in recurrence_rule:
-            # Extract day of month
-            day = re.search(r'BYMONTHDAY=([^;]+)', recurrence_rule)
-            if day:
-                trigger_kwargs['day'] = day.group(1)
+            elif 'FREQ=WEEKLY' in recurrence_rule:
+                # Extract day of week
+                days = re.search(r'BYDAY=([^;]+)', recurrence_rule)
+                if days:
+                    # Convert from RRULE day format (MO,TU,etc) to cron format (0-6)
+                    day_map = {'MO': 0, 'TU': 1, 'WE': 2, 'TH': 3, 'FR': 4, 'SA': 5, 'SU': 6}
+                    day_list = days.group(1).split(',')
+                    cron_days = [str(day_map[day]) for day in day_list]
+                    trigger_kwargs['day_of_week'] = ','.join(cron_days)
+                    
+            elif 'FREQ=MONTHLY' in recurrence_rule:
+                # Extract day of month
+                day = re.search(r'BYMONTHDAY=([^;]+)', recurrence_rule)
+                if day:
+                    trigger_kwargs['day'] = day.group(1)
         
         # Create and return the trigger
         return CronTrigger(**trigger_kwargs)
@@ -206,7 +223,7 @@ def get_all_scheduled_messages(session_id=None):
             'message': message,
             'type': job.kwargs.get('type', 'text'),
             'target': job.kwargs.get('target', 'Chat'),
-            'recurrence': str(job.trigger) if 'cron' in str(job.trigger).lower() else 'none'
+            'recurrence': job.kwargs.get('recurrence', 'none'),
         })
     
     return scheduled_messages
@@ -305,18 +322,35 @@ def backup_jobs_to_pocketbase():
 
 def restore_jobs_from_pocketbase():
     """Restore scheduler jobs from PocketBase backup"""
-    from app.services.pocketbase import list_records
+    from app.services.pocketbase import list_records, fetch_lov
+    from datetime import datetime
+    import pytz
     
     try:
         # Get all backed up jobs
-        result = list_records('whatsappku_scheduled_messages', filter_str='enabled = true')
+        result1 = list_records('whatsappku_scheduled_messages', filter_str='enabled = true')
+        result2 = fetch_lov('whatsappku_lov')
+        
+        # Create a mapping of session IDs to session names
+        session_mapping = {}
+        for session in result2:
+            session_mapping[session.id] = session.name
+        
         restored_count = 0
         
-        for job in result.items:
+        for job in result1.items:
             if not job.enabled:
                 continue
                 
             try:
+                # Get session name from mapping, fallback to session ID if not found
+                session_name = session_mapping.get(job.session, job.session)
+                
+                # Parse the start_date to get hour and minute
+                start_date = datetime.fromisoformat(job.start_date.replace('Z', '+00:00')).astimezone(pytz.timezone('Asia/Kuala_Lumpur'))
+                hour = start_date.hour
+                minute = start_date.minute
+                
                 # Convert recurrence string back to proper format
                 recurrence = None
                 if job.recurrence and job.recurrence != 'none':
@@ -324,13 +358,14 @@ def restore_jobs_from_pocketbase():
                 
                 # Add job back to scheduler
                 add_scheduled_message(
-                    session_id=job.session,  # Changed from session_name to session_id
-                    hour=job.hour,
-                    minute=job.minute,
+                    session_id=job.session,
+                    session_name=session_name,  # Use mapped session name
+                    hour=hour,
+                    minute=minute,
                     phone=job.phone,
                     message=job.message,
-                    type=job.type,
-                    target=job.target,
+                    type=job.target.lower() if job.target else "text",
+                    target=job.target if job.target else "Chat",
                     start_date=job.start_date,
                     recurrence=recurrence
                 )
@@ -338,11 +373,13 @@ def restore_jobs_from_pocketbase():
                 
             except Exception as e:
                 current_app.logger.error(f"Error restoring job {job.job_id}: {str(e)}")
+                current_app.logger.exception("Full traceback:")  # Add full traceback for debugging
                 
         current_app.logger.info(f"Successfully restored {restored_count} jobs from PocketBase")
         return True
     except Exception as e:
         current_app.logger.error(f"Error restoring jobs from PocketBase: {str(e)}")
+        current_app.logger.exception("Full traceback:")  # Add full traceback for debugging
         return False
 
 # Add backup/restore endpoints to routes.py

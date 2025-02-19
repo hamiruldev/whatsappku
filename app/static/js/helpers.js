@@ -141,3 +141,29 @@ function getTodayFormattedDateTime() {
 
   return `${day}${month}${year}_${hours}${minutes}${seconds}`;
 }
+
+function convertCronToRecurrenceRule(cronString) {
+  if (!cronString) {
+    return "";
+  }
+
+  const hourMatch = cronString.match(/hour='(\d+)'/);
+  const minuteMatch = cronString.match(/minute='(\d+)'/);
+
+  const hour = hourMatch ? hourMatch[1] : "0";
+  const minute = minuteMatch ? minuteMatch[1] : "0";
+
+  if (cronString.match(/FREQ=DAILY/)) {
+    return `FREQ=DAILY;INTERVAL=1;BYHOUR=${hour};BYMINUTE=${minute};`;
+  }
+
+  if (cronString.match(/FREQ=WEEKLY/)) {
+    return `FREQ=WEEKLY;INTERVAL=1;BYHOUR=${hour};BYMINUTE=${minute};`;
+  } else if (cronString.match(/FREQ=MONTHLY/)) {
+    return `FREQ=MONTHLY;INTERVAL=1;BYHOUR=${hour};BYMINUTE=${minute};`;
+  } else if (cronString.match(/FREQ=YEARLY/)) {
+    return `FREQ=YEARLY;INTERVAL=1;BYHOUR=${hour};BYMINUTE=${minute};`;
+  }
+
+  return "";
+}

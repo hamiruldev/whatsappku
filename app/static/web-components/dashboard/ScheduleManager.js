@@ -30,7 +30,7 @@ class ScheduleManager extends HTMLElement {
         this.sessionId ||
         document.querySelector("#managementDialog").ej2_instances[0]
           .selectedSessionId;
-      debugger;
+
       const url = sessionId
         ? `/api/scheduled-messages/session/${sessionId}`
         : "/api/scheduled-messages";
@@ -42,6 +42,8 @@ class ScheduleManager extends HTMLElement {
       this.events = this.convertToScheduleEvents(
         this.sessionId ? data.data : data
       );
+
+      console.log("this.events--->", this.events);
 
       if (this.scheduleObj) {
         this.scheduleObj.eventSettings.dataSource = this.events;
@@ -56,8 +58,6 @@ class ScheduleManager extends HTMLElement {
   }
 
   convertToScheduleEvents(messages) {
-    console.log("messages--->", messages);
-
     return messages.map((msg) => {
       // Parse the date and time explicitly from "dd/MM/yyyy HH:mm"
       const [day, month, yearAndTime] = msg.time.split("/");
@@ -72,6 +72,32 @@ class ScheduleManager extends HTMLElement {
         parseInt(minutes, 10) // Minutes
       );
 
+      console.log("msg--->", msg);
+
+      // Handle recurrence
+      let recurrenceRule = "none";
+      if (msg.recurrence) {
+        // Check if it's a recurring job by looking for specific patterns
+        if (msg.recurrence.includes("FREQ=")) {
+          // It's already in RRULE format
+          recurrenceRule = msg.recurrence;
+        } else if (msg.recurrence.startsWith("cron")) {
+          // It's a cron format, but we need to check if it's recurring
+          const cronMatch = msg.recurrence.match(
+            /hour='(\d+)',\s*minute='(\d+)'/
+          );
+          if (cronMatch) {
+            const [_, hour, minute] = cronMatch;
+            // Only set as recurring if there's no start_date (one-off jobs have start_date)
+            if (!msg.start_date) {
+              recurrenceRule = `FREQ=DAILY;INTERVAL=1;BYHOUR=${hour};BYMINUTE=${minute}`;
+            }
+          }
+        } else {
+          recurrenceRule = "";
+        }
+      }
+
       return {
         Id: msg.id,
         Subject: `Message to ${msg.phone || "unknown"}`,
@@ -81,7 +107,7 @@ class ScheduleManager extends HTMLElement {
         Status: msg.enabled ? "Active" : "Inactive",
         Priority: "High",
         Description: msg.message,
-        RecurrenceRule: msg.recurrence || "",
+        RecurrenceRule: recurrenceRule == "none" ? "" : recurrenceRule,
         // Custom fields
         phone: msg.phone,
         target: msg.target || "chat",
@@ -321,17 +347,62 @@ class ScheduleManager extends HTMLElement {
     }).appendTo("#recurrenceEditor");
   }
 
+  // Add helper function to convert RRULE to cron format
+  convertRRULEToCron(rrule) {
+    // example: FREQ=DAILY;INTERVAL=1;
+    if (!rrule || rrule === "none") return null;
+
+    // Parse RRULE components
+    const parts = rrule.split(";").reduce((acc, part) => {
+      const [key, value] = part.split("=");
+      acc[key] = value;
+      return acc;
+    }, {});
+
+    // Get the current date/time from the form
+    const dateTime =
+      document.querySelector("#scheduleTime").ej2_instances[0].value;
+
+    if (parts.FREQ === "DAILY") {
+      // This is a recurring daily job
+      return `cron[hour='${parts.BYHOUR || dateTime.getHours()}', minute='${
+        parts.BYMINUTE || dateTime.getMinutes()
+      }']`;
+    } else {
+      // This is a one-off job, include the start_date
+      return {
+        cron: `cron[hour='${parts.BYHOUR || dateTime.getHours()}', minute='${
+          parts.BYMINUTE || dateTime.getMinutes()
+        }']`,
+        start_date: dateTime.toISOString()
+      };
+    }
+  }
+
   async handleDialogSave(dialog, originalData) {
     try {
       // Extract form data
       var formData = this.getFormData();
 
-      debugger;
-
       console.log("originalData--->", originalData);
+      console.log("formData--->", formData);
+
+      // Convert RRULE to cron format if it exists
+      // example of recurrence value is: FREQ=DAILY;INTERVAL=1;
+      if (!formData.recurrence) {
+        formData.recurrence = "none";
+      }
 
       // Send request to create scheduled message
       const result1 = await this.createScheduledMessage(formData);
+
+      formData.session_name =
+        document.querySelector(
+          "#managementDialog"
+        ).ej2_instances[0].selectedSessionName;
+
+      formData.session_id = formData.session;
+      delete formData.session;
 
       // Save data to backend
       const result2 = await this.createCronJob(originalData, formData);
@@ -340,10 +411,6 @@ class ScheduleManager extends HTMLElement {
       formData.job_id = result2.id;
 
       if (result2.status === "success") {
-        await schedulerAPI.updateScheduledMessage(
-          formData.schedule_id,
-          formData
-        );
         this.saveSchedule(formData.schedule_id, formData);
 
         showNotification("Schedule saved successfully", "success");
@@ -366,7 +433,7 @@ class ScheduleManager extends HTMLElement {
     const getValue = (selector) =>
       document.querySelector(selector)?.ej2_instances?.[0]?.value;
     const selectedTime = getValue("#scheduleTime");
-    const recurrenceRule = getValue("#recurrenceEditor") || "none";
+    const recurrenceRule = getValue("#recurrenceEditor") || "";
     const dateObj = new Date(selectedTime);
     const sessionId =
       document.querySelector("#managementDialog").ej2_instances[0]
@@ -385,7 +452,8 @@ class ScheduleManager extends HTMLElement {
       start_date: dateObj.toISOString(),
       recurrence: recurrenceRule,
       session_id: sessionId,
-      status: "pending"
+      status: "pending",
+      enabled: true
     };
   }
 
@@ -394,6 +462,9 @@ class ScheduleManager extends HTMLElement {
    */
   async createScheduledMessage(formData) {
     try {
+      formData.session = formData.session_id;
+      delete formData.session_id;
+
       return await schedulerAPI.createScheduledMessage(formData);
     } catch (error) {
       console.error("Scheduler API Error:", error);
@@ -404,16 +475,12 @@ class ScheduleManager extends HTMLElement {
    * Saves the scheduled message to the backend
    */
   async createCronJob(originalData, formData) {
-    const sessionId =
-      document.querySelector("#managementDialog").ej2_instances[0]
-        .selectedSessionId;
 
     const response = await fetch("/api/scheduled-messages", {
       method: originalData.Id ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: originalData.Id,
-        session_id: sessionId,
         ...formData
       })
     });
@@ -436,7 +503,7 @@ class ScheduleManager extends HTMLElement {
       Status: "Active",
       Priority: "High",
       Description: formData.message,
-      RecurrenceRule: "",
+      RecurrenceRule: convertCronToRecurrenceRule(formData.recurrenceRule),
       phone: formData.phone,
       target: formData.target,
       type: formData.type,

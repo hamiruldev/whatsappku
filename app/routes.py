@@ -70,7 +70,7 @@ def register_routes(app):
         from app.controllers.scheduler import add_scheduled_message, get_all_scheduled_messages, remove_scheduled_message
         
         if request.method == 'GET':
-            session_id = request.args.get('session')
+            session_id = request.args.get('session_id')
             messages = get_all_scheduled_messages(session_id)
             return jsonify(messages)
         
@@ -79,6 +79,7 @@ def register_routes(app):
             try:
                 job_id = add_scheduled_message(
                     session_id=data.get('session_id'),
+                    session_name=data.get('session_name'),
                     hour=data.get('hour'),
                     minute=data.get('minute'),
                     phone=data.get('phone'),
